@@ -24,6 +24,7 @@ class AdamAPIClient:
         self.headers = Config.get_auth_header()
         self.headers["Content-Type"] = "application/json"
         self.timeout = 30.0
+        self.verify_ssl = Config.ADAM_VERIFY_SSL
 
     def _encode_param(self, param: str) -> str:
         """Percent encode a parameter value."""
@@ -56,7 +57,7 @@ class AdamAPIClient:
         url = "/".join(url_parts)
 
         try:
-            async with httpx.AsyncClient(timeout=self.timeout) as client:
+            async with httpx.AsyncClient(timeout=self.timeout, verify=self.verify_ssl) as client:
                 if method.upper() == "GET":
                     response = await client.get(url, headers=self.headers)
                 elif method.upper() == "POST":

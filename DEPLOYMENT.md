@@ -96,11 +96,20 @@ ADAM_API_TOKEN=your_30_character_token_here
 #   - https://sis.yourschool.com/api
 ADAM_BASE_URL=https://yourschool.adam.co.za/api
 
+# SSL certificate verification (ALWAYS true in production)
+ADAM_VERIFY_SSL=true
+
 # MCP Server settings (defaults are usually fine)
 MCP_SERVER_NAME=ADAM School MIS
 MCP_HOST=127.0.0.1
 MCP_PORT=8000
 ```
+
+**SSL Certificate Requirements**:
+- ✅ Production MUST use valid SSL certificates (Let's Encrypt, commercial CA, etc.)
+- ✅ Keep `ADAM_VERIFY_SSL=true` in production for security
+- ❌ NEVER use self-signed certificates in production
+- ❌ NEVER disable SSL verification (`ADAM_VERIFY_SSL=false`) in production
 
 **Important**: Set proper permissions on the .env file to protect the API token:
 

@@ -15,6 +15,7 @@ class Config:
     # ADAM API Settings
     ADAM_API_TOKEN: str = os.getenv("ADAM_API_TOKEN", "")
     ADAM_BASE_URL: str = os.getenv("ADAM_BASE_URL", "")  # Full URL to ADAM API (e.g., "https://yourschool.adam.co.za/api")
+    ADAM_VERIFY_SSL: bool = os.getenv("ADAM_VERIFY_SSL", "true").lower() in ("true", "1", "yes")  # SSL certificate verification
 
     # MCP Server Settings
     MCP_SERVER_NAME: str = os.getenv("MCP_SERVER_NAME", "ADAM School MIS")

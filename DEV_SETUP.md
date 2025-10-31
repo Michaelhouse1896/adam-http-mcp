@@ -80,6 +80,10 @@ ADAM_API_TOKEN=abc123def456ghi789jkl012mno345
 # Full URL to your ADAM API (including /api)
 ADAM_BASE_URL=https://yourschool.adam.co.za/api
 
+# SSL certificate verification (true/false)
+# Set to false for development with self-signed certificates
+ADAM_VERIFY_SSL=true
+
 # Optional: Customize server settings
 MCP_SERVER_NAME=ADAM School MIS
 MCP_HOST=127.0.0.1
@@ -87,6 +91,25 @@ MCP_PORT=8000
 ```
 
 **Important**: Make sure `.env` is in your `.gitignore` to prevent committing sensitive tokens.
+
+#### Self-Signed SSL Certificates (Development)
+
+If your ADAM development server uses a self-signed SSL certificate, you'll get SSL verification errors. To fix this:
+
+1. **Option 1: Disable SSL verification** (development only):
+   ```bash
+   ADAM_VERIFY_SSL=false
+   ```
+
+2. **Option 2: Use HTTP** (if available):
+   ```bash
+   ADAM_BASE_URL=http://localhost/api
+   ```
+
+**Security Warning**:
+- ⚠️ Only disable SSL verification in trusted development environments
+- ⚠️ NEVER disable SSL verification in production
+- ✅ Production should always use properly signed SSL certificates with `ADAM_VERIFY_SSL=true`
 
 ### 5. Run the Development Server
 
