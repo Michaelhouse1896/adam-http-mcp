@@ -9,6 +9,7 @@ This guide is for IT administrators deploying the ADAM MCP Server on an Ubuntu s
 - SSL certificate for HTTPS
 - ADAM API token (30 characters)
 - Python 3.10 or newer
+- Git (for cloning the repository)
 - Root or sudo access
 
 ## Installation Steps
@@ -19,25 +20,41 @@ This guide is for IT administrators deploying the ADAM MCP Server on an Ubuntu s
 # Update package list
 sudo apt update
 
-# Install Python 3.10+ and pip
-sudo apt install python3 python3-pip python3-venv -y
+# Install Python 3.10+, pip, and git
+sudo apt install python3 python3-pip python3-venv git -y
 
 # Verify Python version (should be 3.10 or higher)
 python3 --version
+
+# Verify git is installed
+git --version
 ```
 
-### 2. Create Application Directory
+### 2. Clone the Repository
 
 ```bash
-# Create directory for the MCP server
-sudo mkdir -p /var/www/adam-mcp
+# Navigate to web root directory
+cd /var/www
+
+# Clone the repository from GitHub
+sudo git clone https://github.com/dominic-gruijters/adam-mcp.git
 
 # Set ownership to www-data (Apache's user)
 sudo chown -R www-data:www-data /var/www/adam-mcp
+```
 
-# Copy application files to the server
-# (Upload files via SCP, rsync, or git clone)
-sudo cp -r /path/to/adam-mcp/* /var/www/adam-mcp/
+**Alternative methods**:
+
+If you prefer SSH (requires SSH key configured on GitHub):
+```bash
+sudo git clone git@github.com:dominic-gruijters/adam-mcp.git
+sudo chown -R www-data:www-data /var/www/adam-mcp
+```
+
+Or if you've already downloaded the files:
+```bash
+sudo cp -r /path/to/adam-mcp /var/www/
+sudo chown -R www-data:www-data /var/www/adam-mcp
 ```
 
 ### 3. Set Up Python Virtual Environment
@@ -256,20 +273,35 @@ sudo systemctl restart adam-mcp
 
 ### Update the Server
 
+When a new version is released on GitHub:
+
 ```bash
 # Stop the service
 sudo systemctl stop adam-mcp
 
-# Pull latest code or copy updated files
+# Navigate to the project directory
 cd /var/www/adam-mcp
-# (update files here)
+
+# Stash any local changes (if you've made custom modifications)
+sudo -u www-data git stash
+
+# Pull latest code from GitHub
+sudo -u www-data git pull origin main
+
+# Apply stashed changes if needed
+# sudo -u www-data git stash pop
 
 # Update dependencies if requirements.txt changed
-sudo -u www-data venv/bin/pip install -r requirements.txt
+sudo -u www-data venv/bin/pip install --upgrade -r requirements.txt
 
 # Start the service
 sudo systemctl start adam-mcp
+
+# Check that it started successfully
+sudo systemctl status adam-mcp
 ```
+
+**Note**: If you've made custom modifications to the code, consider using branches or forks to manage your changes.
 
 ### Check Service Status
 

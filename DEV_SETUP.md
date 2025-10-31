@@ -6,17 +6,27 @@ This guide will help you set up the ADAM MCP Server for local development and te
 
 - Python 3.10 or newer
 - pip (Python package manager)
+- Git (for cloning the repository)
 - ADAM API token (get from your ADAM administrator)
 - Access to your ADAM instance API
 
 ## Quick Start
 
-### 1. Clone or Download the Project
+### 1. Clone the Repository
 
 ```bash
-cd ~/Documents
-# If you have the project, navigate to it
-cd adam_mcp
+# Clone the repository from GitHub
+git clone https://github.com/dominic-gruijters/adam-mcp.git
+
+# Navigate to the project directory
+cd adam-mcp
+```
+
+Alternatively, if you prefer SSH:
+
+```bash
+git clone git@github.com:dominic-gruijters/adam-mcp.git
+cd adam-mcp
 ```
 
 ### 2. Create a Virtual Environment
@@ -148,12 +158,43 @@ http http://127.0.0.1:8000/mcp
 
 ## Development Workflow
 
+### Keeping Your Repository Updated
+
+Before starting work, make sure you have the latest changes:
+
+```bash
+# Pull latest changes from GitHub
+git pull origin main
+
+# Check current status
+git status
+```
+
 ### Making Code Changes
 
-1. **Stop the server** (Ctrl+C)
-2. **Make your changes** to `server.py`, `adam_api.py`, or `config.py`
-3. **Restart the server** (`python server.py`)
-4. **Test your changes** in Claude Desktop or with curl
+1. **Create a feature branch** (optional but recommended):
+   ```bash
+   git checkout -b feature/my-new-feature
+   ```
+
+2. **Stop the server** (Ctrl+C)
+
+3. **Make your changes** to `server.py`, `adam_api.py`, or `config.py`
+
+4. **Restart the server** (`python server.py`)
+
+5. **Test your changes** in Claude Desktop or with curl
+
+6. **Commit your changes**:
+   ```bash
+   git add .
+   git commit -m "Description of your changes"
+   ```
+
+7. **Push to GitHub** (if working on a branch):
+   ```bash
+   git push origin feature/my-new-feature
+   ```
 
 ### Common Development Tasks
 
