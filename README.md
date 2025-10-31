@@ -32,6 +32,7 @@ Access ADAM data through Claude Desktop with these capabilities:
 
    Add the following to your configuration file:
 
+   **For production HTTPS** (recommended):
    ```json
    {
      "mcpServers": {
@@ -43,9 +44,21 @@ Access ADAM data through Claude Desktop with these capabilities:
    }
    ```
 
-   Replace `https://yourschool.adam.co.za/adam-mcp` with your actual ADAM MCP server URL (your IT admin will provide this).
+   **If your school uses HTTP** (requires `--allow-http` flag):
+   ```json
+   {
+     "mcpServers": {
+       "adam": {
+         "command": "npx",
+         "args": ["-y", "mcp-remote", "http://yourschool.adam.co.za/adam-mcp", "--allow-http"]
+       }
+     }
+   }
+   ```
 
-   **Note**: This uses the `mcp-remote` package to connect to the HTTP-based MCP server. Claude Desktop will download it automatically on first use.
+   Replace the URL with your actual ADAM MCP server URL (your IT admin will provide this).
+
+   **Note**: This uses the `mcp-remote` package to connect to HTTP-based MCP servers. Claude Desktop will download it automatically on first use.
 
 3. **Restart Claude Desktop**
 

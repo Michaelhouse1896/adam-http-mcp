@@ -259,6 +259,8 @@ curl https://yourschool.adam.co.za/adam-mcp
 #### Test from Claude Desktop
 
 1. Configure Claude Desktop with your server URL:
+
+   **Production with HTTPS** (recommended):
    ```json
    {
      "mcpServers": {
@@ -270,7 +272,22 @@ curl https://yourschool.adam.co.za/adam-mcp
    }
    ```
 
-   **Note**: This uses the `mcp-remote` package to connect to the HTTP-based MCP server.
+   **If testing with HTTP** (development only):
+   ```json
+   {
+     "mcpServers": {
+       "adam": {
+         "command": "npx",
+         "args": ["-y", "mcp-remote", "http://yourschool.adam.co.za/adam-mcp", "--allow-http"]
+       }
+     }
+   }
+   ```
+
+   **Important**:
+   - Always use HTTPS in production (requires SSL certificate configured in Apache2)
+   - HTTP requires the `--allow-http` flag (except for localhost)
+   - This uses the `mcp-remote` package to connect to HTTP-based MCP servers
 
 2. Restart Claude Desktop
 

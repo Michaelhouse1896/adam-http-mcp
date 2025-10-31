@@ -207,7 +207,7 @@ curl http://YOUR_IP_ADDRESS:8000/mcp
    - macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
    - Windows: `%APPDATA%\Claude\claude_desktop_config.json`
 
-   Add:
+   **For localhost testing** (recommended):
    ```json
    {
      "mcpServers": {
@@ -219,19 +219,23 @@ curl http://YOUR_IP_ADDRESS:8000/mcp
    }
    ```
 
-   For testing on another machine (e.g., via `adam.local`):
+   **For testing via hostname** (e.g., `adam.local`):
    ```json
    {
      "mcpServers": {
        "adam-dev": {
          "command": "npx",
-         "args": ["-y", "mcp-remote", "http://adam.local:8000/mcp"]
+         "args": ["-y", "mcp-remote", "http://adam.local:8000/mcp", "--allow-http"]
        }
      }
    }
    ```
 
-   **Note**: This uses the `mcp-remote` npm package to connect to HTTP-based MCP servers. Claude Desktop will automatically download it on first use.
+   **Notes**:
+   - `mcp-remote` allows HTTP for `localhost`/`127.0.0.1` by default
+   - For other hostnames (like `adam.local`), add `--allow-http` flag
+   - For production, always use HTTPS (no flag needed)
+   - Claude Desktop will automatically download `mcp-remote` on first use
 
 2. **Restart Claude Desktop**
 
