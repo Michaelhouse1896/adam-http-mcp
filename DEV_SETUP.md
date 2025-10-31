@@ -140,27 +140,52 @@ curl http://127.0.0.1:8000/mcp
 # This means the server is running correctly!
 ```
 
-**To properly test MCP protocol**, you need to include the correct headers:
+**To properly test MCP protocol**, you need to initialize a session first:
 
 ```bash
-# Test with proper MCP headers
+# Step 1: Initialize the MCP session
+curl -v -X POST http://127.0.0.1:8000/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test-client","version":"1.0.0"}}}'
+
+# Look for the "Mcp-Session-Id" header in the response
+# Example: Mcp-Session-Id: abc123def456...
+
+# Step 2: Use the session ID for subsequent requests
+SESSION_ID="<paste-session-id-here>"
+
 curl -X POST http://127.0.0.1:8000/mcp \
   -H "Content-Type: application/json" \
   -H "Accept: application/json, text/event-stream" \
-  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'
+  -H "Mcp-Session-Id: $SESSION_ID" \
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}'
 
 # This should return a JSON-RPC response with the list of available tools
 ```
 
-**Alternative: Use httpie** (more readable):
+**Simplified testing script**:
 ```bash
-# Install httpie
-pip install httpie
+# Save this as test_mcp.sh
+#!/bin/bash
+URL="http://127.0.0.1:8000/mcp"
 
-# Test the endpoint
-http POST http://127.0.0.1:8000/mcp \
-  Accept:"application/json, text/event-stream" \
-  jsonrpc=2.0 id=1 method=tools/list params:='{}'
+# Initialize and extract session ID
+RESPONSE=$(curl -i -X POST "$URL" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}')
+
+SESSION_ID=$(echo "$RESPONSE" | grep -i "Mcp-Session-Id:" | cut -d' ' -f2 | tr -d '\r')
+
+echo "Session ID: $SESSION_ID"
+
+# List tools
+curl -X POST "$URL" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -H "Mcp-Session-Id: $SESSION_ID" \
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}'
 ```
 
 If you configured `MCP_HOST=0.0.0.0`, you can also test via:

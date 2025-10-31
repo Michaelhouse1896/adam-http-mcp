@@ -227,12 +227,22 @@ curl http://127.0.0.1:8000/mcp
 # {"jsonrpc":"2.0","id":"server-error","error":{"code":-32600,"message":"Not Acceptable: Client must accept text/event-stream"}}
 ```
 
-**To properly test the MCP protocol**:
+**To properly test the MCP protocol** (requires session initialization):
 ```bash
+# Step 1: Initialize session
+curl -v -X POST http://127.0.0.1:8000/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}'
+
+# Extract the session ID from "Mcp-Session-Id" header, then:
+
+# Step 2: List tools using session ID
 curl -X POST http://127.0.0.1:8000/mcp \
   -H "Content-Type: application/json" \
   -H "Accept: application/json, text/event-stream" \
-  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'
+  -H "Mcp-Session-Id: <session-id-from-step-1>" \
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}'
 
 # Should return a list of available MCP tools
 ```
