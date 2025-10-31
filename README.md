@@ -36,13 +36,16 @@ Access ADAM data through Claude Desktop with these capabilities:
    {
      "mcpServers": {
        "adam": {
-         "url": "https://yourschool.adam.co.za/adam-mcp"
+         "command": "npx",
+         "args": ["-y", "mcp-remote", "https://yourschool.adam.co.za/adam-mcp"]
        }
      }
    }
    ```
 
-   Replace `yourschool.adam.co.za` with your actual ADAM instance URL (your IT admin will provide this).
+   Replace `https://yourschool.adam.co.za/adam-mcp` with your actual ADAM MCP server URL (your IT admin will provide this).
+
+   **Note**: This uses the `mcp-remote` package to connect to the HTTP-based MCP server. Claude Desktop will download it automatically on first use.
 
 3. **Restart Claude Desktop**
 

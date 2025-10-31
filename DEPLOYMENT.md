@@ -263,11 +263,14 @@ curl https://yourschool.adam.co.za/adam-mcp
    {
      "mcpServers": {
        "adam": {
-         "url": "https://yourschool.adam.co.za/adam-mcp"
+         "command": "npx",
+         "args": ["-y", "mcp-remote", "https://yourschool.adam.co.za/adam-mcp"]
        }
      }
    }
    ```
+
+   **Note**: This uses the `mcp-remote` package to connect to the HTTP-based MCP server.
 
 2. Restart Claude Desktop
 

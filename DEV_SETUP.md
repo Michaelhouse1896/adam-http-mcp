@@ -212,11 +212,26 @@ curl http://YOUR_IP_ADDRESS:8000/mcp
    {
      "mcpServers": {
        "adam-dev": {
-         "url": "http://127.0.0.1:8000/mcp"
+         "command": "npx",
+         "args": ["-y", "mcp-remote", "http://127.0.0.1:8000/mcp"]
        }
      }
    }
    ```
+
+   For testing on another machine (e.g., via `adam.local`):
+   ```json
+   {
+     "mcpServers": {
+       "adam-dev": {
+         "command": "npx",
+         "args": ["-y", "mcp-remote", "http://adam.local:8000/mcp"]
+       }
+     }
+   }
+   ```
+
+   **Note**: This uses the `mcp-remote` npm package to connect to HTTP-based MCP servers. Claude Desktop will automatically download it on first use.
 
 2. **Restart Claude Desktop**
 
