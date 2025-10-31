@@ -1,0 +1,31 @@
+[Unit]
+Description=ADAM MCP Server - Model Context Protocol for ADAM School MIS
+After=network.target
+Documentation=https://github.com/yourusername/adam-mcp
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/adam-mcp
+Environment="PATH=/var/www/adam-mcp/venv/bin"
+ExecStart=/var/www/adam-mcp/venv/bin/python server.py
+
+# Restart policy
+Restart=always
+RestartSec=10
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/www/adam-mcp
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=adam-mcp
+
+[Install]
+WantedBy=multi-user.target
