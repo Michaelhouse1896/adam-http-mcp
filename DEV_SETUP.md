@@ -114,15 +114,26 @@ The server is now running locally on `http://127.0.0.1:8000/mcp`
 - ❌ You cannot access it via `http://adam.local:8000/mcp` or from other machines
 - This is the recommended setting for development (more secure)
 
-**To allow access from other machines or domains** (e.g., `adam.local`):
+**To allow access from other machines or domains** (e.g., `adam.local`, VMs):
 1. Edit your `.env` file and change:
    ```bash
    MCP_HOST=0.0.0.0  # Listen on all network interfaces
    ```
 2. Restart the server
-3. Now you can access via `http://adam.local:8000/mcp` or your machine's IP address
+3. Now you can access via hostname or IP address
 
-**Security Note**: Only use `0.0.0.0` in trusted development environments. For production, always use a reverse proxy (Apache2/Nginx).
+**For VM development** (recommended):
+- Use the VM's IP address directly instead of `.local` hostnames for better performance
+- Example: `http://10.211.55.3:8000/mcp` instead of `http://adam.local:8000/mcp`
+- This avoids mDNS/Bonjour resolution overhead
+
+**Security Note**: Only use `0.0.0.0` in trusted development environments. For production, always use a reverse proxy (Apache2/Nginx) with the server bound to `127.0.0.1`.
+
+**Production Performance Note**: The networking overhead you experience in VM development (Mac → VM) won't exist in production because:
+- The MCP server and Apache2 run on the **same Ubuntu server**
+- Apache2 proxies to `127.0.0.1:8000` (localhost, no network hop)
+- Teachers connect via properly configured DNS (not mDNS/Bonjour)
+- Result: Sub-100ms response times instead of multi-second VM network delays
 
 ## Testing the Server
 
@@ -219,17 +230,19 @@ curl http://YOUR_IP_ADDRESS:8000/mcp
    }
    ```
 
-   **For testing via hostname** (e.g., `adam.local`):
+   **For testing via VM** (use IP address for best performance):
    ```json
    {
      "mcpServers": {
        "adam-dev": {
          "command": "npx",
-         "args": ["-y", "mcp-remote", "http://adam.local:8000/mcp", "--allow-http"]
+         "args": ["-y", "mcp-remote", "http://10.211.55.3:8000/mcp", "--allow-http"]
        }
      }
    }
    ```
+
+   Replace `10.211.55.3` with your VM's IP address. Using IP addresses avoids mDNS/Bonjour lookup overhead compared to `.local` hostnames.
 
    **Notes**:
    - `mcp-remote` allows HTTP for `localhost`/`127.0.0.1` by default
