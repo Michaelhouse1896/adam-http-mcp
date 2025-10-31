@@ -109,19 +109,44 @@ Press Ctrl+C to stop the server
 
 The server is now running locally on `http://127.0.0.1:8000/mcp`
 
+**Important**: By default, the server listens on `127.0.0.1` (localhost only). This means:
+- ✅ You can access it via `http://127.0.0.1:8000/mcp` or `http://localhost:8000/mcp`
+- ❌ You cannot access it via `http://adam.local:8000/mcp` or from other machines
+- This is the recommended setting for development (more secure)
+
+**To allow access from other machines or domains** (e.g., `adam.local`):
+1. Edit your `.env` file and change:
+   ```bash
+   MCP_HOST=0.0.0.0  # Listen on all network interfaces
+   ```
+2. Restart the server
+3. Now you can access via `http://adam.local:8000/mcp` or your machine's IP address
+
+**Security Note**: Only use `0.0.0.0` in trusted development environments. For production, always use a reverse proxy (Apache2/Nginx).
+
 ## Testing the Server
 
-### Test the Connection
+### Test the Connection (Localhost)
 
 1. Keep the server running in one terminal
 2. In another terminal, test the endpoint:
 
 ```bash
-# Test basic connectivity
+# Test basic connectivity (use localhost or 127.0.0.1)
 curl http://127.0.0.1:8000/mcp
+curl http://localhost:8000/mcp
 
 # Test with httpie (more readable, install with: pip install httpie)
 http http://127.0.0.1:8000/mcp
+```
+
+If you configured `MCP_HOST=0.0.0.0`, you can also test via:
+```bash
+# Test via hostname (if DNS/hosts configured)
+curl http://adam.local:8000/mcp
+
+# Test via IP address
+curl http://YOUR_IP_ADDRESS:8000/mcp
 ```
 
 ### Test with Claude Desktop (Local Development)

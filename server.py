@@ -296,13 +296,6 @@ if __name__ == "__main__":
     print(f"  - Streamable HTTP: http://{Config.MCP_HOST}:{Config.MCP_PORT}/mcp")
     print("\nPress Ctrl+C to stop the server\n")
 
-    # Run with uvicorn using Streamable HTTP transport
-    import uvicorn
-
+    # Run with FastMCP using Streamable HTTP transport
     # FastMCP automatically creates the /mcp endpoint with Streamable HTTP transport
-    uvicorn.run(
-        mcp.get_asgi_app(),
-        host=Config.MCP_HOST,
-        port=Config.MCP_PORT,
-        log_level="info",
-    )
+    mcp.run(transport="http", host=Config.MCP_HOST, port=Config.MCP_PORT)
