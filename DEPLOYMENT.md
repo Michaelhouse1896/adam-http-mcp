@@ -220,15 +220,30 @@ sudo systemctl reload apache2
 #### Test Local Connection
 
 ```bash
-# Test the local endpoint
+# Test the local endpoint (basic connectivity)
 curl http://127.0.0.1:8000/mcp
+
+# Expected response (this means it's working!):
+# {"jsonrpc":"2.0","id":"server-error","error":{"code":-32600,"message":"Not Acceptable: Client must accept text/event-stream"}}
+```
+
+**To properly test the MCP protocol**:
+```bash
+curl -X POST http://127.0.0.1:8000/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'
+
+# Should return a list of available MCP tools
 ```
 
 #### Test via Apache Proxy
 
 ```bash
-# Test the proxied endpoint
+# Test the proxied endpoint (basic connectivity)
 curl https://yourschool.adam.co.za/adam-mcp
+
+# Same "Not Acceptable" error is expected - means Apache proxy is working!
 ```
 
 #### Test from Claude Desktop

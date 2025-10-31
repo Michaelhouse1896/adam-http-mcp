@@ -132,12 +132,35 @@ The server is now running locally on `http://127.0.0.1:8000/mcp`
 2. In another terminal, test the endpoint:
 
 ```bash
-# Test basic connectivity (use localhost or 127.0.0.1)
+# Basic connectivity test (will show "Not Acceptable" error - this is expected!)
 curl http://127.0.0.1:8000/mcp
-curl http://localhost:8000/mcp
 
-# Test with httpie (more readable, install with: pip install httpie)
-http http://127.0.0.1:8000/mcp
+# Expected response:
+# {"jsonrpc":"2.0","id":"server-error","error":{"code":-32600,"message":"Not Acceptable: Client must accept text/event-stream"}}
+# This means the server is running correctly!
+```
+
+**To properly test MCP protocol**, you need to include the correct headers:
+
+```bash
+# Test with proper MCP headers
+curl -X POST http://127.0.0.1:8000/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'
+
+# This should return a JSON-RPC response with the list of available tools
+```
+
+**Alternative: Use httpie** (more readable):
+```bash
+# Install httpie
+pip install httpie
+
+# Test the endpoint
+http POST http://127.0.0.1:8000/mcp \
+  Accept:"application/json, text/event-stream" \
+  jsonrpc=2.0 id=1 method=tools/list params:='{}'
 ```
 
 If you configured `MCP_HOST=0.0.0.0`, you can also test via:
@@ -148,6 +171,8 @@ curl http://adam.local:8000/mcp
 # Test via IP address
 curl http://YOUR_IP_ADDRESS:8000/mcp
 ```
+
+**Note**: Claude Desktop handles all the MCP protocol details automatically, so you don't need to worry about headers when using it!
 
 ### Test with Claude Desktop (Local Development)
 
