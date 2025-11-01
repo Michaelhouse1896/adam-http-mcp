@@ -2,7 +2,7 @@
 # Simple script to test the ADAM MCP server
 
 # Default to localhost, but allow custom URL
-URL="${1:-http://127.0.0.1:8000/mcp}"
+URL="${1:-http://10.211.55.3:8000/mcp}"
 
 echo "Testing MCP server at: $URL"
 echo "================================"

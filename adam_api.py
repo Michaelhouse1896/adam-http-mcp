@@ -98,7 +98,7 @@ class AdamAPIClient:
             - Boarding house
             - Medical aid information
         """
-        return await self._make_request("Pupils", "pupil", [pupil_id])
+        return await self._make_request("pupils", "pupil", [pupil_id])
 
     async def search_pupils(self, search_term: str) -> dict[str, Any]:
         """
@@ -112,7 +112,7 @@ class AdamAPIClient:
         """
         # ADAM API typically uses a search endpoint
         # This might need adjustment based on your ADAM API version
-        return await self._make_request("Pupils", "search", [search_term])
+        return await self._make_request("pupils", "search", [search_term])
 
     async def get_pupil_classes(self, pupil_id: str) -> dict[str, Any]:
         """
@@ -126,7 +126,7 @@ class AdamAPIClient:
         """
         # This might need to be adjusted based on actual ADAM API endpoint
         # Using a common endpoint structure
-        return await self._make_request("Pupils", "classes", [pupil_id])
+        return await self._make_request("pupils", "classes", [pupil_id])
 
     async def get_pupil_academic_records(
         self, pupil_id: str, subject: Optional[str] = None
@@ -145,7 +145,7 @@ class AdamAPIClient:
         if subject:
             params.append(subject)
 
-        return await self._make_request("Reporting", "results", params)
+        return await self._make_request("reporting", "results", params)
 
     async def get_report_comments(self, pupil_id: str, term: Optional[str] = None) -> dict[str, Any]:
         """
@@ -162,7 +162,7 @@ class AdamAPIClient:
         if term:
             params.append(term)
 
-        return await self._make_request("Reporting", "comments", params)
+        return await self._make_request("reporting", "comments", params)
 
     # Teacher and Contact Methods
 
@@ -176,7 +176,7 @@ class AdamAPIClient:
         Returns:
             Dictionary containing teacher information including names and email addresses
         """
-        return await self._make_request("Pupils", "teachers", [pupil_id])
+        return await self._make_request("pupils", "teachers", [pupil_id])
 
     async def get_family_emails(self, family_id: str) -> dict[str, Any]:
         """
@@ -188,7 +188,7 @@ class AdamAPIClient:
         Returns:
             Dictionary containing family email addresses
         """
-        return await self._make_request("Families", "email", [family_id])
+        return await self._make_request("families", "email", [family_id])
 
     async def get_class_parent_emails(self, class_id: str) -> dict[str, Any]:
         """
@@ -200,7 +200,7 @@ class AdamAPIClient:
         Returns:
             Dictionary containing parent email addresses for the class
         """
-        return await self._make_request("Classes", "parents", [class_id])
+        return await self._make_request("classes", "parents", [class_id])
 
     # Utility Methods
 
@@ -212,7 +212,7 @@ class AdamAPIClient:
             Dictionary with test results
         """
         try:
-            result = await self._make_request("APIRequests", "test")
+            result = await self._make_request("request", "test")
             return {"success": True, "message": "Connection successful", "data": result}
         except AdamAPIError as e:
             return {"success": False, "message": str(e), "status_code": e.status_code}
@@ -230,7 +230,7 @@ class AdamAPIClient:
         Returns:
             Dictionary containing absence counts
         """
-        return await self._make_request("Absentees", "summarycount", [start_date, end_date])
+        return await self._make_request("absentees", "summarycount", [start_date, end_date])
 
     async def get_absence_list(
         self, start_date: str, end_date: str
@@ -245,4 +245,4 @@ class AdamAPIClient:
         Returns:
             Dictionary containing detailed absence records
         """
-        return await self._make_request("Absentees", "list", [start_date, end_date])
+        return await self._make_request("absentees", "list", [start_date, end_date])
