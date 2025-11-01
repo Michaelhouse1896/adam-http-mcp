@@ -176,7 +176,7 @@ class AdamAPIClient:
         Returns:
             Dictionary containing teacher information including names and email addresses
         """
-        return await self._make_request("pupils", "teachers", [pupil_id])
+        return await self._make_request("classes", "pupilteachers", [pupil_id])
 
     async def get_family_emails(self, family_id: str) -> dict[str, Any]:
         """

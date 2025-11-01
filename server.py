@@ -158,6 +158,26 @@ async def get_pupil_teachers_emails(pupil_id: str) -> str:
 
 
 @mcp.tool()
+async def get_pupil_classes_and_teachers(pupil_id: str) -> str:
+    """
+    Get a list of all classes and their teachers for a pupil.
+
+    This shows which teacher teaches each class that the pupil is enrolled in.
+
+    Args:
+        pupil_id: The pupil's ID or admission number
+
+    Returns:
+        Formatted string with class names and teacher names
+    """
+    try:
+        result = await api_client.get_pupil_teachers(pupil_id)
+        return f"Pupil's Classes and Teachers:\n{_format_json(result)}"
+    except AdamAPIError as e:
+        return f"Error retrieving classes and teachers: {e.message}"
+
+
+@mcp.tool()
 async def get_class_parent_emails(class_id: str) -> str:
     """
     Get parent email addresses for all pupils in a specific class.
