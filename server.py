@@ -1,6 +1,5 @@
 """ADAM MCP Server - Model Context Protocol server for ADAM School MIS."""
 
-from typing import Optional
 from fastmcp import FastMCP
 from adam_api import AdamAPIClient, AdamAPIError
 from config import Config
@@ -18,28 +17,6 @@ api_client = AdamAPIClient()
 # ============================================================================
 # PUPIL INFORMATION TOOLS
 # ============================================================================
-
-
-@mcp.tool()
-async def search_pupils(name: str) -> str:
-    """
-    Search for pupils by name.
-
-    Use this tool when you need to find a pupil's ID or when you only know
-    the pupil's name. This returns a list of matching pupils with their IDs
-    and basic information.
-
-    Args:
-        name: The pupil's name or part of their name to search for
-
-    Returns:
-        Formatted string with list of matching pupils and their IDs
-    """
-    try:
-        result = await api_client.search_pupils(name)
-        return f"Search Results for '{name}':\n{_format_json(result)}"
-    except AdamAPIError as e:
-        return f"Error searching for pupils: {e.message}"
 
 
 @mcp.tool()
@@ -87,49 +64,24 @@ async def get_pupil_classes(pupil_id: str) -> str:
 
 
 @mcp.tool()
-async def get_pupil_academic_record(pupil_id: str, subject: Optional[str] = None) -> str:
+async def get_pupil_academic_record(pupil_id: str) -> str:
     """
-    Get academic records and marks for a pupil.
+    Get academic records and marks for a pupil across all reporting periods.
 
-    This retrieves the pupil's marks, grades, and assessment results.
-    Optionally filter by a specific subject.
+    This retrieves the pupil's marks, grades, and assessment results
+    organized by reporting period and subject.
 
     Args:
         pupil_id: The pupil's ID or admission number
-        subject: Optional subject name to filter results (e.g., "Biology", "Mathematics")
 
     Returns:
-        Formatted string with academic records
+        Formatted string with academic records by period and subject
     """
     try:
-        result = await api_client.get_pupil_academic_records(pupil_id, subject)
-        subject_info = f" for {subject}" if subject else ""
-        return f"Academic Records{subject_info}:\n{_format_json(result)}"
+        result = await api_client.get_pupil_academic_records(pupil_id)
+        return f"Academic Records:\n{_format_json(result)}"
     except AdamAPIError as e:
         return f"Error retrieving academic records: {e.message}"
-
-
-@mcp.tool()
-async def get_report_card_summary(pupil_id: str, term: Optional[str] = None) -> str:
-    """
-    Get report card comments and summary for a pupil.
-
-    This retrieves comments from teachers on the pupil's report cards.
-    Optionally filter by a specific term.
-
-    Args:
-        pupil_id: The pupil's ID or admission number
-        term: Optional term filter (e.g., "Term 1", "2024")
-
-    Returns:
-        Formatted string with report comments
-    """
-    try:
-        result = await api_client.get_report_comments(pupil_id, term)
-        term_info = f" for {term}" if term else ""
-        return f"Report Card Comments{term_info}:\n{_format_json(result)}"
-    except AdamAPIError as e:
-        return f"Error retrieving report comments: {e.message}"
 
 
 # ============================================================================
@@ -178,23 +130,21 @@ async def get_pupil_classes_and_teachers(pupil_id: str) -> str:
 
 
 @mcp.tool()
-async def get_class_parent_emails(class_id: str) -> str:
+async def get_all_family_contact_list() -> str:
     """
-    Get parent email addresses for all pupils in a specific class.
+    Get contact list of all families in the system.
 
-    This is useful for sending class-wide communications to parents.
-
-    Args:
-        class_id: The class ID or class name
+    This returns contact information including names, emails, and phone numbers
+    for all family records.
 
     Returns:
-        Formatted string with parent email addresses
+        Formatted string with all family contact information
     """
     try:
-        result = await api_client.get_class_parent_emails(class_id)
-        return f"Parent Email Addresses for Class {class_id}:\n{_format_json(result)}"
+        result = await api_client.get_all_family_contacts()
+        return f"Family Contact List:\n{_format_json(result)}"
     except AdamAPIError as e:
-        return f"Error retrieving parent emails: {e.message}"
+        return f"Error retrieving family contacts: {e.message}"
 
 
 @mcp.tool()

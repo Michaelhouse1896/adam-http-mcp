@@ -100,20 +100,6 @@ class AdamAPIClient:
         """
         return await self._make_request("pupils", "pupil", [pupil_id])
 
-    async def search_pupils(self, search_term: str) -> dict[str, Any]:
-        """
-        Search for pupils by name or other identifying information.
-
-        Args:
-            search_term: Name or search term to find pupils
-
-        Returns:
-            Dictionary containing list of matching pupils with their IDs and basic info
-        """
-        # ADAM API typically uses a search endpoint
-        # This might need adjustment based on your ADAM API version
-        return await self._make_request("pupils", "search", [search_term])
-
     async def get_pupil_classes(self, pupil_id: str) -> dict[str, Any]:
         """
         Get list of classes for a pupil.
@@ -122,47 +108,21 @@ class AdamAPIClient:
             pupil_id: The pupil's ID or admission number
 
         Returns:
-            Dictionary containing the pupil's class list
+            Dictionary containing the pupil's class list with teacher information
         """
-        # This might need to be adjusted based on actual ADAM API endpoint
-        # Using a common endpoint structure
-        return await self._make_request("pupils", "classes", [pupil_id])
+        return await self._make_request("classes", "pupilteachers", [pupil_id])
 
-    async def get_pupil_academic_records(
-        self, pupil_id: str, subject: Optional[str] = None
-    ) -> dict[str, Any]:
+    async def get_pupil_academic_records(self, pupil_id: str) -> dict[str, Any]:
         """
-        Get academic records for a pupil.
+        Get academic records for a pupil across all reporting periods.
 
         Args:
             pupil_id: The pupil's ID or admission number
-            subject: Optional subject filter (e.g., "Biology", "Mathematics")
 
         Returns:
-            Dictionary containing academic records/marks
+            Dictionary containing academic records/marks by subject and period
         """
-        params = [pupil_id]
-        if subject:
-            params.append(subject)
-
-        return await self._make_request("reporting", "results", params)
-
-    async def get_report_comments(self, pupil_id: str, term: Optional[str] = None) -> dict[str, Any]:
-        """
-        Get report card comments summary for a pupil.
-
-        Args:
-            pupil_id: The pupil's ID or admission number
-            term: Optional term filter (e.g., "Term 1", "2024")
-
-        Returns:
-            Dictionary containing report comments
-        """
-        params = [pupil_id]
-        if term:
-            params.append(term)
-
-        return await self._make_request("reporting", "comments", params)
+        return await self._make_request("reporting", "subjectmarksbypupil", [pupil_id])
 
     # Teacher and Contact Methods
 
@@ -190,17 +150,14 @@ class AdamAPIClient:
         """
         return await self._make_request("families", "email", [family_id])
 
-    async def get_class_parent_emails(self, class_id: str) -> dict[str, Any]:
+    async def get_all_family_contacts(self) -> dict[str, Any]:
         """
-        Get parent email addresses for all pupils in a class.
-
-        Args:
-            class_id: The class ID or name
+        Get contact list of all families.
 
         Returns:
-            Dictionary containing parent email addresses for the class
+            Dictionary containing contact information for all families
         """
-        return await self._make_request("classes", "parents", [class_id])
+        return await self._make_request("families", "contactlist")
 
     # Utility Methods
 
