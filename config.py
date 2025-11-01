@@ -17,6 +17,11 @@ class Config:
     ADAM_BASE_URL: str = os.getenv("ADAM_BASE_URL", "")  # Full URL to ADAM API (e.g., "https://yourschool.adam.co.za/api")
     ADAM_VERIFY_SSL: bool = os.getenv("ADAM_VERIFY_SSL", "true").lower() in ("true", "1", "yes")  # SSL certificate verification
 
+    # Data Query API Secrets (for name-based lookups)
+    ADAM_DATAQUERY_PUPILS_SECRET: str = os.getenv("ADAM_DATAQUERY_PUPILS_SECRET", "")
+    ADAM_DATAQUERY_FAMILIES_SECRET: str = os.getenv("ADAM_DATAQUERY_FAMILIES_SECRET", "")
+    ADAM_DATAQUERY_STAFF_SECRET: str = os.getenv("ADAM_DATAQUERY_STAFF_SECRET", "")
+
     # MCP Server Settings
     MCP_SERVER_NAME: str = os.getenv("MCP_SERVER_NAME", "ADAM School MIS")
     MCP_SERVER_VERSION: str = "1.0.0"
@@ -38,6 +43,14 @@ class Config:
         # Validate URL format
         if not cls.ADAM_BASE_URL.startswith(("http://", "https://")):
             raise ValueError("ADAM_BASE_URL must start with http:// or https://")
+
+        # Validate Data Query secrets (optional but recommended)
+        if not cls.ADAM_DATAQUERY_PUPILS_SECRET:
+            print("Warning: ADAM_DATAQUERY_PUPILS_SECRET not set - name-based pupil lookups will not be available")
+        if not cls.ADAM_DATAQUERY_FAMILIES_SECRET:
+            print("Warning: ADAM_DATAQUERY_FAMILIES_SECRET not set - name-based family lookups will not be available")
+        if not cls.ADAM_DATAQUERY_STAFF_SECRET:
+            print("Warning: ADAM_DATAQUERY_STAFF_SECRET not set - name-based staff lookups will not be available")
 
     @classmethod
     def get_auth_header(cls) -> dict[str, str]:

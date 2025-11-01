@@ -166,6 +166,119 @@ async def get_family_emails(family_id: str) -> str:
 
 
 # ============================================================================
+# NAME-BASED LOOKUP TOOLS
+# ============================================================================
+
+
+@mcp.tool()
+async def find_pupil_by_name(name: str) -> str:
+    """
+    Search for pupils by name (first name, last name, or preferred name).
+
+    This tool enables finding pupil IDs by searching with partial or full names.
+    Use the returned pupil_id with other tools like get_pupil_information.
+
+    Args:
+        name: Name to search for (case-insensitive, partial matches supported)
+              Examples: "Smith", "John", "John Smith", "Arde"
+
+    Returns:
+        Formatted list of matching pupils with their IDs, names, grades, and admin numbers
+    """
+    try:
+        results = await api_client.find_pupils_by_name(name)
+        if not results:
+            return f"No pupils found matching '{name}'"
+
+        output = f"Found {len(results)} pupil(s) matching '{name}':\n\n"
+        for i, pupil in enumerate(results, 1):
+            output += f"{i}. {pupil['preferred_name']} {pupil['last_name']}\n"
+            output += f"   Pupil ID: {pupil['pupil_id']}\n"
+            output += f"   Admin Number: {pupil['admin_number']}\n"
+            output += f"   Grade: {pupil['grade']}\n"
+            output += f"   Email: {pupil['email']}\n"
+            output += "\n"
+
+        output += "Use the Pupil ID with other tools like get_pupil_information(pupil_id)"
+        return output
+    except AdamAPIError as e:
+        return f"Error searching for pupils: {e.message}"
+
+
+@mcp.tool()
+async def find_family_by_name(name: str) -> str:
+    """
+    Search for families by family surname or parent names.
+
+    This tool enables finding family IDs by searching with partial or full names.
+    Use the returned family_id with other tools like get_family_emails.
+
+    Args:
+        name: Name to search for (case-insensitive, partial matches supported)
+              Examples: "Smith", "Anderson", "John"
+
+    Returns:
+        Formatted list of matching families with their IDs and names
+    """
+    try:
+        results = await api_client.find_families_by_name(name)
+        if not results:
+            return f"No families found matching '{name}'"
+
+        output = f"Found {len(results)} family/families matching '{name}':\n\n"
+        for i, family in enumerate(results, 1):
+            output += f"{i}. {family['family_surname']}\n"
+            output += f"   Family ID: {family['family_id']}\n"
+            output += f"   Address Name: {family['address_name']}\n"
+            output += f"   First Names: {family['family_first_names']}\n"
+            if family['father_greeting']:
+                output += f"   Father: {family['father_greeting']}\n"
+            if family['mother_greeting']:
+                output += f"   Mother: {family['mother_greeting']}\n"
+            output += "\n"
+
+        output += "Use the Family ID with other tools like get_family_emails(family_id)"
+        return output
+    except AdamAPIError as e:
+        return f"Error searching for families: {e.message}"
+
+
+@mcp.tool()
+async def find_staff_by_name(name: str) -> str:
+    """
+    Search for staff members by name (first name, last name, or preferred name).
+
+    This tool enables finding staff IDs by searching with partial or full names.
+
+    Args:
+        name: Name to search for (case-insensitive, partial matches supported)
+              Examples: "Smith", "Jane", "Abbott"
+
+    Returns:
+        Formatted list of matching staff members with their IDs, names, positions, and contact info
+    """
+    try:
+        results = await api_client.find_staff_by_name(name)
+        if not results:
+            return f"No staff members found matching '{name}'"
+
+        output = f"Found {len(results)} staff member(s) matching '{name}':\n\n"
+        for i, staff in enumerate(results, 1):
+            output += f"{i}. {staff['full_name']}\n"
+            output += f"   Staff ID: {staff['staff_id']}\n"
+            output += f"   Admin No: {staff['admin_no']}\n"
+            output += f"   Position: {staff['position']}\n"
+            if staff['department']:
+                output += f"   Department: {staff['department']}\n"
+            output += f"   Email: {staff['email']}\n"
+            output += "\n"
+
+        return output
+    except AdamAPIError as e:
+        return f"Error searching for staff: {e.message}"
+
+
+# ============================================================================
 # ATTENDANCE TOOLS
 # ============================================================================
 

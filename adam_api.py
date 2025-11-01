@@ -203,3 +203,156 @@ class AdamAPIClient:
             Dictionary containing detailed absence records
         """
         return await self._make_request("absentees", "list", [start_date, end_date])
+
+    # Data Query API Methods (for name-based lookups)
+
+    async def get_all_pupils_data(self) -> dict[str, Any]:
+        """
+        Get all current pupils data from Data Query API.
+
+        Returns:
+            Dictionary containing all pupil records with detailed information
+
+        Raises:
+            AdamAPIError: If the secret is not configured or API returns an error
+        """
+        if not Config.ADAM_DATAQUERY_PUPILS_SECRET:
+            raise AdamAPIError("ADAM_DATAQUERY_PUPILS_SECRET not configured")
+        return await self._make_request("dataquery", "get", [Config.ADAM_DATAQUERY_PUPILS_SECRET])
+
+    async def get_all_families_data(self) -> dict[str, Any]:
+        """
+        Get all current families data from Data Query API.
+
+        Returns:
+            Dictionary containing all family records with detailed information
+
+        Raises:
+            AdamAPIError: If the secret is not configured or API returns an error
+        """
+        if not Config.ADAM_DATAQUERY_FAMILIES_SECRET:
+            raise AdamAPIError("ADAM_DATAQUERY_FAMILIES_SECRET not configured")
+        return await self._make_request("dataquery", "get", [Config.ADAM_DATAQUERY_FAMILIES_SECRET])
+
+    async def get_all_staff_data(self) -> dict[str, Any]:
+        """
+        Get all current staff data from Data Query API.
+
+        Returns:
+            Dictionary containing all staff records with detailed information
+
+        Raises:
+            AdamAPIError: If the secret is not configured or API returns an error
+        """
+        if not Config.ADAM_DATAQUERY_STAFF_SECRET:
+            raise AdamAPIError("ADAM_DATAQUERY_STAFF_SECRET not configured")
+        return await self._make_request("dataquery", "get", [Config.ADAM_DATAQUERY_STAFF_SECRET])
+
+    async def find_pupils_by_name(self, name: str) -> list[dict[str, Any]]:
+        """
+        Find pupils by name (searches first name, last name, and preferred name).
+
+        Args:
+            name: Name to search for (case-insensitive, partial match)
+
+        Returns:
+            List of matching pupil records with ID, name, grade, and admin number
+        """
+        data = await self.get_all_pupils_data()
+        search_term = name.lower().strip()
+        results = []
+
+        for record in data.values():
+            last_name = record.get("last_name_2", "").lower()
+            preferred_name = record.get("preferred_name_3", "").lower()
+            full_first_names = record.get("full_first_names_4", "").lower()
+
+            # Match if search term appears in any name field
+            if (search_term in last_name or
+                search_term in preferred_name or
+                search_term in full_first_names or
+                search_term in f"{preferred_name} {last_name}" or
+                search_term in f"{full_first_names} {last_name}"):
+                results.append({
+                    "pupil_id": record.get("adam_id_257"),
+                    "admin_number": record.get("admin_number_1"),
+                    "last_name": record.get("last_name_2"),
+                    "preferred_name": record.get("preferred_name_3"),
+                    "full_first_names": record.get("full_first_names_4"),
+                    "grade": record.get("grade_9"),
+                    "email": record.get("email_21"),
+                })
+
+        return results
+
+    async def find_families_by_name(self, name: str) -> list[dict[str, Any]]:
+        """
+        Find families by name (searches family surname and parent names).
+
+        Args:
+            name: Name to search for (case-insensitive, partial match)
+
+        Returns:
+            List of matching family records with ID and names
+        """
+        data = await self.get_all_families_data()
+        search_term = name.lower().strip()
+        results = []
+
+        for record in data.values():
+            family_surname = record.get("family_greeting_surname_133", "").lower()
+            family_first_names = record.get("family_greeting_first_names_143", "").lower()
+            address_name = record.get("family_address_name_132", "").lower()
+
+            # Match if search term appears in any family name field
+            if (search_term in family_surname or
+                search_term in family_first_names or
+                search_term in address_name or
+                search_term in f"{family_first_names} {family_surname}"):
+                results.append({
+                    "family_id": record.get("family_identifier_253"),
+                    "family_surname": record.get("family_greeting_surname_133"),
+                    "family_first_names": record.get("family_greeting_first_names_143"),
+                    "address_name": record.get("family_address_name_132"),
+                    "father_greeting": record.get("father_039_s_greeting_288"),
+                    "mother_greeting": record.get("mother_039_s_greeting_289"),
+                })
+
+        return results
+
+    async def find_staff_by_name(self, name: str) -> list[dict[str, Any]]:
+        """
+        Find staff by name (searches first name, last name, and preferred name).
+
+        Args:
+            name: Name to search for (case-insensitive, partial match)
+
+        Returns:
+            List of matching staff records with ID, name, and position
+        """
+        data = await self.get_all_staff_data()
+        search_term = name.lower().strip()
+        results = []
+
+        for record in data.values():
+            last_name = record.get("last_name_31", "").lower()
+            preferred_name = record.get("first_name_preferred_32", "").lower()
+            full_name = record.get("full_first_name_142", "").lower()
+
+            # Match if search term appears in any name field
+            if (search_term in last_name or
+                search_term in preferred_name or
+                search_term in full_name or
+                search_term in f"{preferred_name} {last_name}"):
+                results.append({
+                    "staff_id": record.get("adam_identifier_284"),
+                    "admin_no": record.get("admin_no_30"),
+                    "last_name": record.get("last_name_31"),
+                    "preferred_name": record.get("first_name_preferred_32"),
+                    "full_name": record.get("full_first_name_142"),
+                    "position": record.get("position_233"),
+                    "department": record.get("department_49"),
+                    "email": record.get("email_address_67"),
+                })
+
+        return results
