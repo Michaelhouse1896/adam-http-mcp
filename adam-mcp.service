@@ -11,6 +11,11 @@ WorkingDirectory=/var/www/adam-mcp
 Environment="PATH=/var/www/adam-mcp/venv/bin"
 ExecStart=/var/www/adam-mcp/venv/bin/python server.py
 
+# Graceful shutdown settings
+TimeoutStopSec=10
+KillMode=mixed
+KillSignal=SIGTERM
+
 # Restart policy
 Restart=always
 RestartSec=10

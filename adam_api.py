@@ -138,6 +138,18 @@ class AdamAPIClient:
         """
         return await self._make_request("classes", "pupilteachers", [pupil_id])
 
+    async def get_pupil_family_relationships(self, pupil_id: str) -> dict[str, Any]:
+        """
+        Get family relationships for a pupil.
+
+        Args:
+            pupil_id: The pupil's ID or admission number
+
+        Returns:
+            Dictionary containing family relationships including family IDs
+        """
+        return await self._make_request("familyrelationships", "pupil", [pupil_id])
+
     async def get_family_emails(self, family_id: str) -> dict[str, Any]:
         """
         Get email addresses for a family.
@@ -203,6 +215,175 @@ class AdamAPIClient:
             Dictionary containing detailed absence records
         """
         return await self._make_request("absentees", "list", [start_date, end_date])
+
+    # Assessment and Reporting Methods
+
+    async def get_recent_assessment_results(self, pupil_id: str) -> dict[str, Any]:
+        """
+        Get recent assessment results for a pupil.
+
+        Args:
+            pupil_id: The pupil's ID or admission number
+
+        Returns:
+            Dictionary containing recent assessment results with marks and comments
+        """
+        return await self._make_request("assessment", "recentresults", [pupil_id])
+
+    async def get_pupil_markbook(self, period_id: str, pupil_id: str) -> dict[str, Any]:
+        """
+        Get detailed markbook/assessment data for a pupil in a reporting period.
+
+        Args:
+            period_id: The reporting period ID
+            pupil_id: The pupil's ID or admission number
+
+        Returns:
+            Dictionary containing detailed assessment breakdown by subject and category
+        """
+        return await self._make_request("reporting", "markbook", [period_id, pupil_id])
+
+    async def get_reporting_periods(self, year: str = None) -> dict[str, Any]:
+        """
+        Get all reporting periods for a specific year.
+
+        Args:
+            year: Year (optional, defaults to current year on server)
+
+        Returns:
+            Dictionary containing reporting periods with dates
+        """
+        if year:
+            return await self._make_request("reporting", "periods", [year])
+        else:
+            return await self._make_request("reporting", "periods")
+
+    async def get_pupil_reporting_periods(self, pupil_id: str) -> dict[str, Any]:
+        """
+        Get reporting periods available for a pupil.
+
+        Args:
+            pupil_id: The pupil's ID or admission number
+
+        Returns:
+            Dictionary containing available reporting periods for the pupil
+        """
+        return await self._make_request("reporting", "pupilreportingperiods", [pupil_id])
+
+    async def get_pupil_report_pdf(self, period_id: str, pupil_id: str) -> bytes:
+        """
+        Get a pupil's report document (PDF).
+
+        Args:
+            period_id: The reporting period ID
+            pupil_id: The pupil's ID or admission number
+
+        Returns:
+            Binary PDF data
+        """
+        # This returns binary PDF data, not JSON
+        result = await self._make_request("reporting", "report", [period_id, pupil_id])
+        return result
+
+    # Records and Behavior Methods
+
+    async def get_recent_pupil_records(self, pupil_id: str) -> dict[str, Any]:
+        """
+        Get recent records (achievements/disciplinary) for a pupil.
+
+        Args:
+            pupil_id: The pupil's ID or admission number
+
+        Returns:
+            Dictionary containing recent behavior and achievement records
+        """
+        return await self._make_request("recordsandpoints", "recentpupilrecords", [pupil_id])
+
+    async def get_pupil_records_date_range(
+        self, pupil_id: str, start_date: str = None, end_date: str = None
+    ) -> dict[str, Any]:
+        """
+        Get all records for a pupil with optional date range filtering.
+
+        Args:
+            pupil_id: The pupil's ID or admission number
+            start_date: Start date (format: YYYY-MM-DD, optional)
+            end_date: End date (format: YYYY-MM-DD, optional)
+
+        Returns:
+            Dictionary containing behavior and achievement records
+        """
+        params = [pupil_id]
+        if start_date:
+            params.append(start_date)
+            if end_date:
+                params.append(end_date)
+        return await self._make_request("recordsandpoints", "pupilrecords", params)
+
+    # Medical and Sports Methods
+
+    async def get_off_sport_list(self, date: str = None) -> dict[str, Any]:
+        """
+        Get the off-sport list for a specific date.
+
+        Args:
+            date: Date in YYYY-MM-DD format (optional, defaults to today)
+
+        Returns:
+            Dictionary containing list of pupil IDs who are off sport
+        """
+        if date:
+            return await self._make_request("medical", "offsport", [date])
+        else:
+            return await self._make_request("medical", "offsport")
+
+    # Directory and Lookup Methods
+
+    async def get_all_pupil_contacts(self) -> dict[str, Any]:
+        """
+        Get contact list of all pupils.
+
+        Returns:
+            Dictionary containing contact information for all pupils
+        """
+        return await self._make_request("pupils", "contactlist")
+
+    async def get_subjects_by_grade(self, grade: str) -> dict[str, Any]:
+        """
+        Get subjects for a specific grade.
+
+        Args:
+            grade: Grade level (e.g., "10")
+
+        Returns:
+            Dictionary containing subjects available for the grade
+        """
+        return await self._make_request("subjects", "get_by_grade", [grade])
+
+    async def get_family_children(self, family_id: str) -> dict[str, Any]:
+        """
+        Get children associated with a family.
+
+        Args:
+            family_id: The family ID
+
+        Returns:
+            Dictionary containing pupils linked to the family
+        """
+        return await self._make_request("families", "children", [family_id])
+
+    async def get_pupil_image(self, pupil_id: str, width: int = 200) -> bytes:
+        """
+        Get a pupil's photo/image.
+
+        Args:
+            pupil_id: The pupil's ID or admission number
+            width: Image width in pixels (default: 200)
+
+        Returns:
+            Binary image data
+        """
+        return await self._make_request("pupils", "image", [pupil_id, str(width)])
 
     # Data Query API Methods (for name-based lookups)
 

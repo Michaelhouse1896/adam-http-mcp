@@ -24,11 +24,27 @@ pip install -r requirements.txt
 cp .env.example .env
 # Edit .env with your ADAM_API_TOKEN and ADAM_BASE_URL
 
-# Run development server
+# Run development server (recommended - handles port conflicts gracefully)
+./manage_server.sh start
+
+# Alternative: Direct Python execution
 python server.py
 
 # Server will start on http://127.0.0.1:8000/mcp
 ```
+
+### Server Management
+
+Use the included management script for reliable server control:
+
+```bash
+./manage_server.sh start    # Start the server
+./manage_server.sh stop     # Gracefully stop (handles stuck ports)
+./manage_server.sh restart  # Restart the server
+./manage_server.sh status   # Check if server is running
+```
+
+**Note**: If you encounter "address already in use" errors, run `./manage_server.sh stop` to properly clean up stuck processes.
 
 ### Testing
 
