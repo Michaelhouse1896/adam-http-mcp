@@ -433,6 +433,11 @@ class AdamAPIClient:
         """
         Find pupils by name (searches first name, last name, and preferred name).
 
+        Supports both single-word and multi-word searches:
+        - "Smith" → matches anyone with "Smith" in any name field
+        - "John Smith" → matches anyone with both "John" AND "Smith" in their name
+        - "Joh" → matches "John", "Johnny", etc. (partial matching)
+
         Args:
             name: Name to search for (case-insensitive, partial match)
 
@@ -441,6 +446,9 @@ class AdamAPIClient:
         """
         data = await self.get_all_pupils_data()
         search_term = name.lower().strip()
+
+        # Split search term into individual words for multi-word matching
+        search_words = search_term.split()
         results = []
 
         for record in data.values():
@@ -448,12 +456,12 @@ class AdamAPIClient:
             preferred_name = record.get("preferred_name_3", "").lower()
             full_first_names = record.get("full_first_names_4", "").lower()
 
-            # Match if search term appears in any name field
-            if (search_term in last_name or
-                search_term in preferred_name or
-                search_term in full_first_names or
-                search_term in f"{preferred_name} {last_name}" or
-                search_term in f"{full_first_names} {last_name}"):
+            # Create a combined string of all name fields for searching
+            combined_names = f"{last_name} {preferred_name} {full_first_names}"
+
+            # Check if ALL search words appear somewhere in the name fields
+            # This handles multi-word searches like "John Smith"
+            if all(word in combined_names for word in search_words):
                 results.append({
                     "pupil_id": record.get("adam_id_257"),
                     "admin_number": record.get("admin_number_1"),
@@ -470,6 +478,10 @@ class AdamAPIClient:
         """
         Find families by name (searches family surname and parent names).
 
+        Supports both single-word and multi-word searches:
+        - "Smith" → matches any family with "Smith" in any name field
+        - "John Smith" → matches families with both "John" AND "Smith" in their names
+
         Args:
             name: Name to search for (case-insensitive, partial match)
 
@@ -478,18 +490,23 @@ class AdamAPIClient:
         """
         data = await self.get_all_families_data()
         search_term = name.lower().strip()
+
+        # Split search term into individual words for multi-word matching
+        search_words = search_term.split()
         results = []
 
         for record in data.values():
             family_surname = record.get("family_greeting_surname_133", "").lower()
             family_first_names = record.get("family_greeting_first_names_143", "").lower()
             address_name = record.get("family_address_name_132", "").lower()
+            father_greeting = record.get("father_039_s_greeting_288", "").lower()
+            mother_greeting = record.get("mother_039_s_greeting_289", "").lower()
 
-            # Match if search term appears in any family name field
-            if (search_term in family_surname or
-                search_term in family_first_names or
-                search_term in address_name or
-                search_term in f"{family_first_names} {family_surname}"):
+            # Create a combined string of all name fields for searching
+            combined_names = f"{family_surname} {family_first_names} {address_name} {father_greeting} {mother_greeting}"
+
+            # Check if ALL search words appear somewhere in the name fields
+            if all(word in combined_names for word in search_words):
                 results.append({
                     "family_id": record.get("family_identifier_253"),
                     "family_surname": record.get("family_greeting_surname_133"),
@@ -505,6 +522,10 @@ class AdamAPIClient:
         """
         Find staff by name (searches first name, last name, and preferred name).
 
+        Supports both single-word and multi-word searches:
+        - "Smith" → matches any staff with "Smith" in any name field
+        - "Jane Smith" → matches staff with both "Jane" AND "Smith" in their name
+
         Args:
             name: Name to search for (case-insensitive, partial match)
 
@@ -513,6 +534,9 @@ class AdamAPIClient:
         """
         data = await self.get_all_staff_data()
         search_term = name.lower().strip()
+
+        # Split search term into individual words for multi-word matching
+        search_words = search_term.split()
         results = []
 
         for record in data.values():
@@ -520,11 +544,11 @@ class AdamAPIClient:
             preferred_name = record.get("first_name_preferred_32", "").lower()
             full_name = record.get("full_first_name_142", "").lower()
 
-            # Match if search term appears in any name field
-            if (search_term in last_name or
-                search_term in preferred_name or
-                search_term in full_name or
-                search_term in f"{preferred_name} {last_name}"):
+            # Create a combined string of all name fields for searching
+            combined_names = f"{last_name} {preferred_name} {full_name}"
+
+            # Check if ALL search words appear somewhere in the name fields
+            if all(word in combined_names for word in search_words):
                 results.append({
                     "staff_id": record.get("adam_identifier_284"),
                     "admin_no": record.get("admin_no_30"),
