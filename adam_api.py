@@ -356,3 +356,185 @@ class AdamAPIClient:
                 })
 
         return results
+
+    # Class and Registration Methods
+
+    async def get_grade_registrations(self, grade: str) -> dict[str, Any]:
+        """
+        Get all class registrations for a specific grade.
+
+        Args:
+            grade: Grade level (e.g., "8", "9", "10", "11", "12")
+
+        Returns:
+            Dictionary containing registration records with pupil, class, and teacher information
+        """
+        return await self._make_request("registrations", "grade", [grade])
+
+    async def get_pupil_family_relationships(self, pupil_id: str) -> dict[str, Any]:
+        """
+        Get family relationships for a specific pupil.
+
+        Args:
+            pupil_id: The pupil's ID
+
+        Returns:
+            Dictionary containing family relationship information including family_id
+        """
+        return await self._make_request("familyrelationships", "pupil", [pupil_id])
+
+    async def get_class_parent_emails(
+        self, grade: str, class_description: str
+    ) -> dict[str, Any]:
+        """
+        Get all parent email addresses for pupils in a specific class.
+
+        This orchestrates multiple API calls to:
+        1. Get all registrations for the grade
+        2. Filter by class description
+        3. Get family relationships for each pupil
+        4. Get email addresses for each family
+        5. Deduplicate and format results
+
+        Args:
+            grade: Grade level (e.g., "8", "9", "10", "11", "12")
+            class_description: Class description to search for (case-insensitive, partial match)
+                             Examples: "Mathematics", "10A", "English"
+
+        Returns:
+            Dictionary containing:
+            - pupils: List of pupils with their families and emails
+            - all_emails: Deduplicated list of all email addresses
+            - summary: Statistics about the class
+        """
+        # Get all registrations for the grade
+        registrations_response = await self.get_grade_registrations(grade)
+
+        # Handle response - could be a list or dict with 'data' key
+        if isinstance(registrations_response, dict):
+            registrations_data = registrations_response.get("data", registrations_response)
+        else:
+            registrations_data = registrations_response
+
+        # Ensure we have a list
+        if not isinstance(registrations_data, list):
+            raise AdamAPIError(f"Unexpected registrations data format: {type(registrations_data)}")
+
+        # Filter registrations by class description (case-insensitive partial match)
+        search_term = class_description.lower().strip()
+        matching_registrations = []
+        seen_pupils = set()
+
+        # Debug: log first few class descriptions to help troubleshoot
+        if registrations_data:
+            sample_classes = set()
+            for reg in registrations_data[:10]:
+                sample_classes.add(reg.get("class_description", "N/A"))
+            print(f"DEBUG: Sample class descriptions: {list(sample_classes)[:5]}")
+            print(f"DEBUG: Search term: '{search_term}'")
+            print(f"DEBUG: Total registrations: {len(registrations_data)}")
+
+        for reg in registrations_data:
+            class_desc = reg.get("class_description", "").lower()
+            pupil_id = reg.get("pupil_id")
+
+            # Match class description and avoid duplicate pupils
+            if search_term in class_desc and pupil_id not in seen_pupils:
+                matching_registrations.append(reg)
+                seen_pupils.add(pupil_id)
+
+        print(f"DEBUG: Found {len(matching_registrations)} matching registrations")
+
+        if not matching_registrations:
+            return {
+                "pupils": [],
+                "all_emails": [],
+                "summary": {
+                    "total_pupils": 0,
+                    "total_families": 0,
+                    "total_emails": 0,
+                    "class_description": class_description,
+                    "grade": grade,
+                },
+            }
+
+        # Collect pupil and family data
+        pupils_data = []
+        all_emails_set = set()
+
+        for reg in matching_registrations:
+            pupil_id = reg.get("pupil_id")
+            pupil_info = {
+                "pupil_id": pupil_id,
+                "pupil_firstname": reg.get("pupil_firstname"),
+                "pupil_lastname": reg.get("pupil_lastname"),
+                "pupil_admin": reg.get("pupil_admin"),
+                "class_description": reg.get("class_description"),
+                "families": [],
+            }
+
+            # Get family relationships for this pupil
+            try:
+                family_rels_response = await self.get_pupil_family_relationships(str(pupil_id))
+
+                # Handle response - could be a list or dict with 'data' key
+                if isinstance(family_rels_response, dict):
+                    family_rels = family_rels_response.get("data", family_rels_response)
+                else:
+                    family_rels = family_rels_response
+
+                # Ensure we have a list
+                if not isinstance(family_rels, list):
+                    # Skip this pupil if we can't get proper family data
+                    continue
+
+                # Get emails for each family
+                for family_rel in family_rels:
+                    family_id = family_rel.get("family_id")
+                    if not family_id:
+                        continue
+
+                    try:
+                        # Get all email addresses for this family
+                        emails_data = await self.get_family_emails(str(family_id))
+                        emails = emails_data if isinstance(emails_data, list) else []
+
+                        # Add to pupil's family list
+                        pupil_info["families"].append({
+                            "family_id": family_id,
+                            "relationship": family_rel.get("relationship"),
+                            "family_name": f"{family_rel.get('family_primary_firstname', '')} {family_rel.get('family_primary_lastname', '')}".strip(),
+                            "emails": emails,
+                        })
+
+                        # Add emails to global set (deduplicate)
+                        for email in emails:
+                            if email:  # Skip empty emails
+                                all_emails_set.add(email.strip())
+
+                    except AdamAPIError:
+                        # Skip families with email retrieval errors
+                        continue
+
+            except AdamAPIError:
+                # Skip pupils with family relationship errors
+                continue
+
+            pupils_data.append(pupil_info)
+
+        # Generate summary
+        total_families = sum(len(p["families"]) for p in pupils_data)
+        summary = {
+            "total_pupils": len(pupils_data),
+            "total_families": total_families,
+            "total_emails": len(all_emails_set),
+            "class_description": class_description,
+            "grade": grade,
+            "matched_class_names": list(set(r.get("class_description") for r in matching_registrations)),
+        }
+
+        return {
+            "pupils": pupils_data,
+            "all_emails": sorted(list(all_emails_set)),  # Sort for consistency
+            "summary": summary,
+        }

@@ -279,6 +279,145 @@ async def find_staff_by_name(name: str) -> str:
 
 
 # ============================================================================
+# CLASS AND PARENT CONTACT TOOLS
+# ============================================================================
+
+
+@mcp.tool()
+async def list_classes_for_grade(grade: str) -> str:
+    """
+    List all available classes for a specific grade.
+
+    Use this tool first to see what class descriptions are available before
+    calling get_class_parent_emails.
+
+    Args:
+        grade: Grade level (e.g., "8", "9", "10", "11", "12")
+
+    Returns:
+        List of all class descriptions available for that grade
+    """
+    try:
+        registrations_response = await api_client.get_grade_registrations(grade)
+
+        # Handle response - could be a list or dict with 'data' key
+        if isinstance(registrations_response, dict):
+            registrations_data = registrations_response.get("data", registrations_response)
+        else:
+            registrations_data = registrations_response
+
+        if not registrations_data or not isinstance(registrations_data, list):
+            return f"No registrations found for grade {grade}"
+
+        # Collect unique class descriptions
+        classes = {}
+        for reg in registrations_data:
+            class_desc = reg.get("class_description", "")
+            class_id = reg.get("class_id")
+            subject = reg.get("subject_name", "")
+
+            if class_desc and class_desc not in classes:
+                classes[class_desc] = {
+                    "class_id": class_id,
+                    "subject": subject,
+                    "pupil_count": 0
+                }
+            if class_desc:
+                classes[class_desc]["pupil_count"] += 1
+
+        if not classes:
+            return f"No classes found for grade {grade}"
+
+        output = f"Available Classes for Grade {grade}:\n"
+        output += "=" * 60 + "\n\n"
+
+        for i, (class_desc, info) in enumerate(sorted(classes.items()), 1):
+            output += f"{i}. {class_desc}\n"
+            output += f"   Subject: {info['subject']}\n"
+            output += f"   Pupils: {info['pupil_count']}\n"
+            output += f"   Class ID: {info['class_id']}\n\n"
+
+        output += f"\nTotal: {len(classes)} unique classes\n"
+        output += f"\nUse these class descriptions with get_class_parent_emails()\n"
+        output += f"Example: get_class_parent_emails('{grade}', 'Mathematics')"
+
+        return output
+
+    except AdamAPIError as e:
+        return f"Error retrieving classes: {e.message}"
+
+
+@mcp.tool()
+async def get_class_parent_emails(grade: str, class_description: str) -> str:
+    """
+    Get all parent email addresses for pupils in a specific class.
+
+    This is useful for teachers who want to email all parents in their class.
+    Searches by class description (e.g., "Mathematics", "English", "10A").
+
+    Args:
+        grade: Grade level (e.g., "8", "9", "10", "11", "12")
+        class_description: Class description to search for (partial match, case-insensitive)
+                          Examples: "Mathematics", "English", "10A", "Biology"
+
+    Returns:
+        Formatted string with both a comma-separated email list and detailed breakdown
+    """
+    try:
+        result = await api_client.get_class_parent_emails(grade, class_description)
+
+        summary = result["summary"]
+        all_emails = result["all_emails"]
+        pupils = result["pupils"]
+
+        if summary["total_pupils"] == 0:
+            return f"No classes found matching '{class_description}' in grade {grade}"
+
+        # Build output with both formats
+        output = f"Parent Emails for Grade {grade} - '{class_description}'\n"
+        output += "=" * 60 + "\n\n"
+
+        # Show matched class names
+        if summary["matched_class_names"]:
+            output += f"Matched Classes: {', '.join(summary['matched_class_names'])}\n\n"
+
+        # Format 1: Comma-separated list (ready to copy-paste)
+        output += "=== COMMA-SEPARATED EMAIL LIST (Copy for Email) ===\n"
+        output += ", ".join(all_emails) + "\n\n"
+
+        # Format 2: Detailed breakdown
+        output += "=== DETAILED BREAKDOWN BY PUPIL ===\n\n"
+        for i, pupil in enumerate(pupils, 1):
+            output += f"{i}. {pupil['pupil_firstname']} {pupil['pupil_lastname']}"
+            output += f" (ID: {pupil['pupil_id']}, Admin: {pupil['pupil_admin']})\n"
+            output += f"   Class: {pupil['class_description']}\n"
+
+            if pupil["families"]:
+                for family in pupil["families"]:
+                    output += f"   Family: {family['family_name']} (ID: {family['family_id']})\n"
+                    output += f"   Relationship: {family['relationship']}\n"
+                    if family["emails"]:
+                        output += f"   Emails: {', '.join(family['emails'])}\n"
+                    else:
+                        output += "   Emails: (none on record)\n"
+            else:
+                output += "   Families: (none on record)\n"
+            output += "\n"
+
+        # Summary statistics
+        output += "=" * 60 + "\n"
+        output += f"SUMMARY:\n"
+        output += f"  Total Pupils: {summary['total_pupils']}\n"
+        output += f"  Total Families: {summary['total_families']}\n"
+        output += f"  Total Unique Email Addresses: {summary['total_emails']}\n"
+
+        return output
+
+    except AdamAPIError as e:
+        return f"Error retrieving class parent emails: {e.message}"
+
+
+# ============================================================================
 # ATTENDANCE TOOLS
 # ============================================================================
 
