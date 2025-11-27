@@ -31,7 +31,8 @@ async def get_pupil_information(pupil_id: str) -> str:
         pupil_id: The pupil's ID or admission number
 
     Returns:
-        Formatted string with pupil information
+        JSON-formatted string containing pupil information (name, grade, house, etc.),
+        or an error message starting with "Error" if the retrieval fails.
     """
     try:
         result = await api_client.get_pupil_info(pupil_id)
@@ -49,7 +50,8 @@ async def get_pupil_classes(pupil_id: str) -> str:
         pupil_id: The pupil's ID or admission number
 
     Returns:
-        Formatted string with class list
+        JSON-formatted string containing the list of classes,
+        or an error message starting with "Error" if the retrieval fails.
     """
     try:
         result = await api_client.get_pupil_classes(pupil_id)
@@ -75,7 +77,8 @@ async def get_pupil_academic_record(pupil_id: str) -> str:
         pupil_id: The pupil's ID or admission number
 
     Returns:
-        Formatted string with academic records by period and subject
+        JSON-formatted string containing academic records organized by period and subject,
+        or an error message starting with "Error" if the retrieval fails.
     """
     try:
         result = await api_client.get_pupil_academic_records(pupil_id)
@@ -100,7 +103,8 @@ async def get_pupil_teachers_emails(pupil_id: str) -> str:
         pupil_id: The pupil's ID or admission number
 
     Returns:
-        Formatted string with teacher names and email addresses
+        JSON-formatted string containing teacher names and email addresses,
+        or an error message starting with "Error" if the retrieval fails.
     """
     try:
         result = await api_client.get_pupil_teachers(pupil_id)
@@ -120,7 +124,8 @@ async def get_pupil_classes_and_teachers(pupil_id: str) -> str:
         pupil_id: The pupil's ID or admission number
 
     Returns:
-        Formatted string with class names and teacher names
+        JSON-formatted string containing class names and their respective teachers,
+        or an error message starting with "Error" if the retrieval fails.
     """
     try:
         result = await api_client.get_pupil_teachers(pupil_id)
@@ -138,7 +143,8 @@ async def get_all_family_contact_list() -> str:
     for all family records.
 
     Returns:
-        Formatted string with all family contact information
+        JSON-formatted string containing contact information for all families,
+        or an error message starting with "Error" if the retrieval fails.
     """
     try:
         result = await api_client.get_all_family_contacts()
@@ -161,7 +167,8 @@ async def get_pupil_family_relationships(pupil_id: str) -> str:
         pupil_id: The pupil's ID or admission number
 
     Returns:
-        Formatted string with family relationships including family IDs
+        JSON-formatted string containing family relationships and family IDs,
+        or an error message starting with "Error" if the retrieval fails.
     """
     try:
         result = await api_client.get_pupil_family_relationships(pupil_id)
@@ -179,7 +186,8 @@ async def get_family_emails(family_id: str) -> str:
         family_id: The family ID
 
     Returns:
-        Formatted string with family email addresses
+        JSON-formatted string containing family email addresses,
+        or an error message starting with "Error" if the retrieval fails.
     """
     try:
         result = await api_client.get_family_emails(family_id)
@@ -206,7 +214,8 @@ async def find_pupil_by_name(name: str) -> str:
               Examples: "Smith", "John", "John Smith", "Arde"
 
     Returns:
-        Formatted list of matching pupils with their IDs, names, grades, and admin numbers
+        Formatted text list of matching pupils with their IDs, names, grades, and admin numbers,
+        or an error message starting with "Error" if the search fails.
     """
     try:
         results = await api_client.find_pupils_by_name(name)
@@ -241,7 +250,8 @@ async def find_family_by_name(name: str) -> str:
               Examples: "Smith", "Anderson", "John"
 
     Returns:
-        Formatted list of matching families with their IDs and names
+        Formatted text list of matching families with their IDs and names,
+        or an error message starting with "Error" if the search fails.
     """
     try:
         results = await api_client.find_families_by_name(name)
@@ -278,7 +288,8 @@ async def find_staff_by_name(name: str) -> str:
               Examples: "Smith", "Jane", "Abbott"
 
     Returns:
-        Formatted list of matching staff members with their IDs, names, positions, and contact info
+        Formatted text list of matching staff members with their IDs, names, positions, and contact info,
+        or an error message starting with "Error" if the search fails.
     """
     try:
         results = await api_client.find_staff_by_name(name)
@@ -316,7 +327,8 @@ async def get_absence_summary(start_date: str, end_date: str) -> str:
         end_date: End date in YYYY-MM-DD format (e.g., "2024-01-31")
 
     Returns:
-        Formatted string with absence summary counts
+        JSON-formatted string containing absence summary counts,
+        or an error message starting with "Error" if the retrieval fails.
     """
     try:
         result = await api_client.get_absence_summary(start_date, end_date)
@@ -335,7 +347,8 @@ async def get_detailed_absence_list(start_date: str, end_date: str) -> str:
         end_date: End date in YYYY-MM-DD format (e.g., "2024-01-31")
 
     Returns:
-        Formatted string with detailed absence records
+        JSON-formatted string containing detailed absence records,
+        or an error message starting with "Error" if the retrieval fails.
     """
     try:
         result = await api_client.get_absence_list(start_date, end_date)
@@ -361,7 +374,8 @@ async def get_recent_assessment_results(pupil_id: str) -> str:
         pupil_id: The pupil's ID or admission number
 
     Returns:
-        Formatted string with recent assessment results
+        JSON-formatted string containing recent assessment results,
+        or an error message starting with "Error" if the retrieval fails.
     """
     try:
         result = await api_client.get_recent_assessment_results(pupil_id)
@@ -383,7 +397,8 @@ async def get_pupil_markbook(period_id: str, pupil_id: str) -> str:
         pupil_id: The pupil's ID or admission number
 
     Returns:
-        Formatted string with detailed markbook data
+        JSON-formatted string containing detailed markbook data,
+        or an error message starting with "Error" if the retrieval fails.
     """
     try:
         result = await api_client.get_pupil_markbook(period_id, pupil_id)
@@ -404,7 +419,8 @@ async def get_reporting_periods(year: str = None) -> str:
         year: Year (e.g., "2024"). If not provided, returns current year's periods.
 
     Returns:
-        Formatted string with reporting periods
+        JSON-formatted string containing reporting periods and dates,
+        or an error message starting with "Error" if the retrieval fails.
     """
     try:
         result = await api_client.get_reporting_periods(year)
@@ -426,7 +442,8 @@ async def get_pupil_reporting_periods(pupil_id: str) -> str:
         pupil_id: The pupil's ID or admission number
 
     Returns:
-        Formatted string with pupil's reporting periods
+        JSON-formatted string containing the pupil's reporting periods,
+        or an error message starting with "Error" if the retrieval fails.
     """
     try:
         result = await api_client.get_pupil_reporting_periods(pupil_id)
@@ -448,7 +465,8 @@ async def get_pupil_report_pdf_info(period_id: str, pupil_id: str) -> str:
         pupil_id: The pupil's ID or admission number
 
     Returns:
-        Information about report availability
+        String containing information about report availability and download instructions,
+        or an error message starting with "Error" if the retrieval fails.
     """
     try:
         # Note: The actual PDF endpoint returns binary data, which can't be displayed in text
@@ -480,7 +498,8 @@ async def get_recent_pupil_records(pupil_id: str) -> str:
         pupil_id: The pupil's ID or admission number
 
     Returns:
-        Formatted string with recent records
+        JSON-formatted string containing recent behavior and achievement records,
+        or an error message starting with "Error" if the retrieval fails.
     """
     try:
         result = await api_client.get_recent_pupil_records(pupil_id)
@@ -502,7 +521,8 @@ async def get_pupil_records_by_date(
         end_date: End date in YYYY-MM-DD format (optional)
 
     Returns:
-        Formatted string with pupil records
+        JSON-formatted string containing pupil records for the specified period,
+        or an error message starting with "Error" if the retrieval fails.
     """
     try:
         result = await api_client.get_pupil_records_date_range(pupil_id, start_date, end_date)
@@ -533,7 +553,8 @@ async def get_off_sport_list(date: str = None) -> str:
         date: Date in YYYY-MM-DD format (e.g., "2024-03-15"). If not provided, returns today's list.
 
     Returns:
-        Formatted string with list of pupil IDs who are off sport
+        JSON-formatted string containing the list of pupil IDs who are off sport,
+        or an error message starting with "Error" if the retrieval fails.
     """
     try:
         result = await api_client.get_off_sport_list(date)
@@ -557,7 +578,8 @@ async def get_all_pupil_contacts() -> str:
     email addresses, phone numbers, and grades.
 
     Returns:
-        Formatted string with all pupil contacts
+        JSON-formatted string containing contact information for all pupils,
+        or an error message starting with "Error" if the retrieval fails.
     """
     try:
         result = await api_client.get_all_pupil_contacts()
@@ -578,7 +600,8 @@ async def get_subjects_by_grade(grade: str) -> str:
         grade: Grade level (e.g., "8", "9", "10", "11", "12")
 
     Returns:
-        Formatted string with subjects for the grade
+        JSON-formatted string containing subjects available for the grade,
+        or an error message starting with "Error" if the retrieval fails.
     """
     try:
         result = await api_client.get_subjects_by_grade(grade)
@@ -599,7 +622,8 @@ async def get_family_children(family_id: str) -> str:
         family_id: The family ID
 
     Returns:
-        Formatted string with family's children
+        JSON-formatted string containing list of children in the family,
+        or an error message starting with "Error" if the retrieval fails.
     """
     try:
         result = await api_client.get_family_children(family_id)
@@ -621,7 +645,8 @@ async def get_pupil_photo_info(pupil_id: str) -> str:
         pupil_id: The pupil's ID or admission number
 
     Returns:
-        Information about photo availability
+        String containing information about photo availability and viewing instructions,
+        or an error message starting with "Error" if the retrieval fails.
     """
     try:
         # Note: The actual image endpoint returns binary data
@@ -650,7 +675,7 @@ async def test_adam_connection() -> str:
     the ADAM API and that the API token is valid.
 
     Returns:
-        Status message indicating success or failure
+        Status message string indicating success or failure, with details.
     """
     result = await api_client.test_connection()
     if result["success"]:
