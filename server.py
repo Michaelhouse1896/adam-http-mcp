@@ -851,6 +851,7 @@ def _format_json(data: dict) -> str:
 if __name__ == "__main__":
     import signal
     import sys
+    import os
 
     # Signal handler for graceful shutdown
     def signal_handler(sig, frame):
@@ -861,24 +862,31 @@ if __name__ == "__main__":
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
 
-    # Run the MCP server with Streamable HTTP transport
-    # The server will be available at http://localhost:8000/mcp
-    print(f"Starting {Config.MCP_SERVER_NAME} v{Config.MCP_SERVER_VERSION}")
-    print(f"Server will listen on {Config.MCP_HOST}:{Config.MCP_PORT}")
-    print(f"Connecting to ADAM API: {Config.ADAM_BASE_URL}")
-    print("\nAvailable endpoints:")
-    print(f"  - Streamable HTTP: http://{Config.MCP_HOST}:{Config.MCP_PORT}/mcp")
-    print("\nPress Ctrl+C to stop the server\n")
+    # Run the MCP server
+    # Check for transport mode (default to http for backward compatibility)
+    transport = os.getenv("MCP_TRANSPORT", "http").lower()
 
-    # Run with FastMCP using Streamable HTTP transport
-    # FastMCP automatically creates the /mcp endpoint with Streamable HTTP transport
-    # Signal handlers above ensure graceful shutdown and port release
-    try:
-        mcp.run(
-            transport="http",
-            host=Config.MCP_HOST,
-            port=Config.MCP_PORT
-        )
-    except KeyboardInterrupt:
-        print("\nServer stopped by user")
-        sys.exit(0)
+    if transport == "stdio":
+        print(f"Starting {Config.MCP_SERVER_NAME} v{Config.MCP_SERVER_VERSION} in stdio mode", file=sys.stderr)
+        try:
+            mcp.run(transport="stdio")
+        except KeyboardInterrupt:
+            sys.exit(0)
+    else:
+        # Run with Streamable HTTP transport
+        print(f"Starting {Config.MCP_SERVER_NAME} v{Config.MCP_SERVER_VERSION}")
+        print(f"Server will listen on {Config.MCP_HOST}:{Config.MCP_PORT}")
+        print(f"Connecting to ADAM API: {Config.ADAM_BASE_URL}")
+        print("\nAvailable endpoints:")
+        print(f"  - Streamable HTTP: http://{Config.MCP_HOST}:{Config.MCP_PORT}/mcp")
+        print("\nPress Ctrl+C to stop the server\n")
+
+        try:
+            mcp.run(
+                transport="http",
+                host=Config.MCP_HOST,
+                port=Config.MCP_PORT
+            )
+        except KeyboardInterrupt:
+            print("\nServer stopped by user")
+            sys.exit(0)
