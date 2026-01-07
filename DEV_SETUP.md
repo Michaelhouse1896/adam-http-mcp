@@ -4,11 +4,25 @@ This guide will help you set up the ADAM MCP Server for local development and te
 
 ## Prerequisites
 
-- Python 3.10 or newer
+- **Python 3.10 or newer** (REQUIRED - `fastmcp` requires Python >=3.10)
 - pip (Python package manager)
 - Git (for cloning the repository)
 - ADAM API token (get from your ADAM administrator)
 - Access to your ADAM instance API
+
+**Check your Python version:**
+```bash
+python3 --version  # Must be 3.10 or higher
+```
+
+If your system Python is too old (e.g., macOS default 3.9):
+```bash
+# Install newer Python via Homebrew
+brew install python@3.13
+
+# Verify version
+/opt/homebrew/opt/python@3.13/bin/python3 --version
+```
 
 ## Quick Start
 
@@ -33,7 +47,11 @@ cd adam-mcp
 
 ```bash
 # Create virtual environment
+# If using system Python 3.10+:
 python3 -m venv venv
+
+# If using Homebrew Python 3.13 (macOS):
+/opt/homebrew/opt/python@3.13/bin/python3 -m venv venv
 
 # Activate virtual environment
 # On macOS/Linux:
@@ -234,6 +252,38 @@ curl http://YOUR_IP_ADDRESS:8000/mcp
 **Note**: Claude Desktop handles all the MCP protocol details automatically, so you don't need to worry about headers when using it!
 
 ### Test with Claude Desktop (Local Development)
+
+#### Option 1: stdio Mode (Recommended - No HTTP Server)
+
+The project includes `mcpServers.json` for **direct stdio communication** with Claude Desktop:
+
+1. **Enable Project MCP Servers in Claude Desktop**
+   - Settings → Developer → Enable "Project MCP Servers"
+
+2. **Open this project folder** in Claude Desktop
+
+3. **The server runs automatically** via stdio (no manual activation needed!)
+
+The `mcpServers.json` configuration:
+```json
+{
+  "mcpServers": {
+    "adam-mcp": {
+      "command": "/path/to/venv/bin/python",
+      "args": ["/path/to/server.py"],
+      "env": {"MCP_TRANSPORT": "stdio"}
+    }
+  }
+}
+```
+
+**Benefits of stdio mode:**
+- ✅ No HTTP server or port management
+- ✅ No manual venv activation required
+- ✅ Claude Desktop handles everything automatically
+- ✅ Lower latency than HTTP
+
+#### Option 2: HTTP Mode (Remote Testing)
 
 1. **Configure Claude Desktop to use your local server**
 

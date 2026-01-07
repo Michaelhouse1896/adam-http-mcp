@@ -10,11 +10,24 @@ This is an MCP (Model Context Protocol) server that provides Claude Desktop with
 
 ## Development Commands
 
+### Prerequisites
+
+**Python 3.10 or higher is required.** The `fastmcp` dependency requires Python >=3.10.
+
+- Check your Python version: `python3 --version`
+- If using macOS with Homebrew Python 3.13: `/opt/homebrew/opt/python@3.13/bin/python3`
+- If system Python is 3.9 or lower, use a newer Python installation to create the venv
+
 ### Setup and Running
 
 ```bash
 # Create and activate virtual environment
+# On macOS with Homebrew Python 3.13 (if system python3 is too old):
+/opt/homebrew/opt/python@3.13/bin/python3 -m venv venv
+
+# Or with system python3 if it's >= 3.10:
 python3 -m venv venv
+
 source venv/bin/activate  # macOS/Linux
 
 # Install dependencies
@@ -23,6 +36,25 @@ pip install -r requirements.txt
 # Configure environment (copy and edit .env)
 cp .env.example .env
 # Edit .env with your ADAM_API_TOKEN and ADAM_BASE_URL
+```
+
+### Running the Server
+
+**For Claude Desktop (stdio mode - no manual venv activation needed):**
+
+The project includes `mcpServers.json` which configures the server to run in stdio mode.
+Claude Desktop (or other MCP clients) will automatically use the venv Python when launching the server.
+
+```bash
+# Enable in Claude Desktop settings:
+# Settings → Developer → Enable Project MCP Servers
+```
+
+**For HTTP mode (development/testing):**
+
+```bash
+# Activate venv first
+source venv/bin/activate
 
 # Run development server (recommended - handles port conflicts gracefully)
 ./manage_server.sh start
