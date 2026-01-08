@@ -32,6 +32,9 @@ logs/
 # Claude Flow metrics
 .claude-flow/metrics/
 
+# Swarm database files
+.swarm/
+
 # Testing
 .pytest_cache/
 .coverage
