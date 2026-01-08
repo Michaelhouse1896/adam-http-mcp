@@ -29,6 +29,9 @@ Thumbs.db
 *.log
 logs/
 
+# Claude Flow metrics
+.claude-flow/metrics/
+
 # Testing
 .pytest_cache/
 .coverage
