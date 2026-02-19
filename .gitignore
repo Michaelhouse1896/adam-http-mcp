@@ -26,6 +26,10 @@ Thumbs.db
 *.log
 logs/
 
+# Claude tooling
+.claude-flow/
+.swarm/
+
 # Testing
 .pytest_cache/
 .coverage
