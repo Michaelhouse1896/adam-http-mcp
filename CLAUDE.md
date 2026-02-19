@@ -4,49 +4,41 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-MCP (Model Context Protocol) server that wraps the ADAM School Management Information System REST API, exposing it as tools for Claude Desktop. Teachers query pupil info, academic records, attendance, and contacts through natural language.
+Pure CLI tool for the ADAM School Management Information System REST API. Teachers query pupil info, academic records, attendance, and contacts via command line. Designed for piping, scripting, and agent use (OpenClaw etc.).
 
-**Stack**: Python 3.10+ / FastMCP / httpx / uvicorn
+**Stack**: Python 3.10+ / httpx. Installed via `pipx install -e .`.
 
 ## Development Commands
 
 ```bash
-# Setup (requires Python >= 3.10; macOS Homebrew: /opt/homebrew/opt/python@3.13/bin/python3)
-python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt
-cp .env.example .env   # then edit with real credentials
+# Install (isolated env via pipx)
+pipx install -e .
 
-# Run in HTTP mode (dev/testing)
-./manage_server.sh start          # recommended (handles port conflicts)
-./manage_server.sh stop|restart|status
-python server.py                  # alternative direct run → http://127.0.0.1:8000/mcp
+# Set credentials via environment
+export ADAM_API_TOKEN=your_30_character_token_here
+export ADAM_BASE_URL=https://yourschool.adam.co.za/api
 
-# Run in stdio mode (Claude Desktop)
-MCP_TRANSPORT=stdio python server.py    # or enable Project MCP Servers in Claude Desktop
+# Run
+adam test
+adam pupils find Smith
+adam academics periods 2024 --format text
 
-# Test MCP protocol handshake (HTTP mode)
-./test_mcp.sh                           # defaults to http://10.211.55.3:8000/mcp
-./test_mcp.sh http://localhost:8000/mcp
-
-# Test stdio mode
-./test_stdio.sh
-
-# Test ADAM API directly
-curl -H "Authorization: Bearer YOUR_TOKEN" https://yourschool.adam.co.za/api/request/test
-
-# Production (Ubuntu systemd + Apache2 reverse proxy)
-sudo systemctl start|stop|restart|status adam-mcp
-sudo journalctl -u adam-mcp -f
+# Piping
+adam pupils find Smith | jq -r '.[0].pupil_id' | xargs adam academics record
+adam classes parent-emails 10 Mathematics | jq -r '.all_emails[]'
 ```
 
 ## Architecture
 
-Three files, one responsibility each:
+Single-file Python CLI (`adam_cli.py`) containing everything:
 
-- **`server.py`** — MCP tool definitions (`@mcp.tool()` decorators). Each tool calls `AdamAPIClient`, catches `AdamAPIError`, returns formatted strings. Entry point supports both `stdio` and `http` transport via `MCP_TRANSPORT` env var.
+- **Config class** — reads env vars, validates token (30 chars) and base URL
+- **AdamAPIClient class** — all async ADAM API methods. Central `_make_request(module, resource, params)` builds path-segment URLs: `/api/{module}/{resource}/{param1}/{param2}`. Parameters are percent-encoded.
+- **AdamAPIError** — custom exception with message and status_code
+- **CLI** — argparse with nested subparsers, 28 commands in 10 groups
+- **Output formatters** — json (default), text, csv
 
-- **`adam_api.py`** — `AdamAPIClient` wraps all ADAM HTTP requests. Central method `_make_request(module, resource, params)` builds path-segment URLs (NOT query params): `/api/{module}/{resource}/{param1}/{param2}`. Parameters are percent-encoded via `_encode_param()`. Name-based lookups (`find_pupils_by_name`, `find_families_by_name`, `find_staff_by_name`) fetch full datasets via Data Query API secrets and filter client-side.
-
-- **`config.py`** — Loads `.env` at import time, validates on module load. Token must be exactly 30 chars. Warns (doesn't fail) if optional Data Query secrets are missing.
+`pyproject.toml` defines the `adam` console script entry point and `httpx` dependency. Installed via `pipx install -e .` for an isolated environment.
 
 ### ADAM API URL Pattern
 
@@ -59,44 +51,59 @@ All parameters are path segments joined by `/`, percent-encoded.
 
 ### Data Flow for Name-Based Lookups
 
-`find_pupil_by_name` → `get_all_pupils_data()` (Data Query API with secret) → client-side filter. Same pattern for families and staff. These require `ADAM_DATAQUERY_*_SECRET` env vars.
+`find_pupils_by_name` -> `get_all_pupils_data()` (Data Query API with secret) -> client-side filter. Same for families and staff. Requires `ADAM_DATAQUERY_*_SECRET` env vars.
 
 ### Data Flow for Class Parent Emails
 
-`get_class_parent_emails` orchestrates multiple API calls: grade registrations → filter by class description → per-pupil family relationships → per-family emails → deduplicate.
+`get_class_parent_emails` orchestrates: grade registrations -> filter by class description -> per-pupil family relationships -> per-family emails -> deduplicate.
 
-## Adding a New MCP Tool
+## Adding a New CLI Command
 
-1. Add async method to `AdamAPIClient` in `adam_api.py`:
+1. Add async method to `AdamAPIClient`:
    ```python
    async def get_something(self, param: str) -> dict[str, Any]:
        return await self._make_request("ModuleName", "resource", [param])
    ```
 
-2. Add `@mcp.tool()` in `server.py`:
+2. Add command handler:
    ```python
-   @mcp.tool()
-   async def get_something(param: str) -> str:
-       """User-facing description (shown in Claude Desktop)."""
-       try:
-           result = await api_client.get_something(param)
-           return f"Results:\n{_format_json(result)}"
-       except AdamAPIError as e:
-           return f"Error: {e.message}"
+   async def cmd_group_action(client: AdamAPIClient, args: argparse.Namespace) -> Any:
+       return await client.get_something(args.param)
    ```
 
-3. Reference `API_DOCUMENTATION.md` for endpoint details. Dates must be `YYYY-MM-DD`.
+3. Add subparser in `build_parser()`:
+   ```python
+   p = group_sub.add_parser("action", help="Description")
+   p.add_argument("param", help="Parameter description")
+   p.set_defaults(func=cmd_group_action)
+   ```
+
+4. Reference `API_DOCUMENTATION.md` for endpoint details. Dates must be `YYYY-MM-DD`.
+
+## CLI Command Tree
+
+```
+adam test
+adam pupils find|info|classes|contacts|search-id|fields|search-admin
+adam calendar pupil-links|staff-links
+adam academics record|assessments|markbook|periods|pupil-periods|results|previous-reports|question-breakdown
+adam teachers emails|classes
+adam families find|emails|children|relationships|contacts|current-children|search-id|relationship-types|family-relationships|login-privileges
+adam classes list|parent-emails|by-grade-period-subject
+adam attendance summary|list|pupil-days
+adam leaves approved
+adam records recent|by-date
+adam staff find
+adam medical off-sport
+adam subjects by-grade|by-grades
+adam psychometric assessments
+adam messages list|get
+adam admissions status-list|statuses
+adam dataquery get-one
+```
+
+All output JSON to stdout by default. `--format text` for humans. `--format csv` for export. Errors to stderr. Exit 0/1.
 
 ## Configuration
 
-All via `.env` (never committed). Required: `ADAM_API_TOKEN` (30 chars), `ADAM_BASE_URL` (full URL ending in `/api`). Optional: `ADAM_DATAQUERY_PUPILS_SECRET`, `ADAM_DATAQUERY_FAMILIES_SECRET`, `ADAM_DATAQUERY_STAFF_SECRET` (enable name lookups), `ADAM_VERIFY_SSL` (default `true`), `MCP_HOST` (default `127.0.0.1`), `MCP_PORT` (default `8000`).
-
-## Deployment
-
-- **Dev**: `python server.py` on localhost:8000. Set `MCP_HOST=0.0.0.0` for network access.
-- **Production**: systemd service (`adam-mcp.service`) → `127.0.0.1:8000` → Apache2 reverse proxy (`apache2-adam-mcp.conf`) handles SSL at `https://school.adam.co.za/adam-mcp`.
-
-## Known Issues
-
-- The `describe_table` tool for ADAM MySQL MCP database does not work. Use MySQL `information_schema` queries instead.
-- VM development (Mac → Parallels → Ubuntu) has multi-second response times due to mDNS overhead. Use IP addresses instead of `.local` hostnames.
+All via environment variables (`export`). Required: `ADAM_API_TOKEN` (30 chars), `ADAM_BASE_URL` (full URL ending in `/api`). Optional: `ADAM_DATAQUERY_PUPILS_SECRET`, `ADAM_DATAQUERY_FAMILIES_SECRET`, `ADAM_DATAQUERY_STAFF_SECRET` (enable name lookups), `ADAM_VERIFY_SSL` (default `true`).

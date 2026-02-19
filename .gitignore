@@ -11,9 +11,6 @@ ENV/
 dist/
 build/
 
-# Environment variables (contains sensitive API tokens)
-.env
-
 # IDE
 .vscode/
 .idea/
@@ -28,12 +25,6 @@ Thumbs.db
 # Logs
 *.log
 logs/
-
-# Claude Flow metrics
-.claude-flow/metrics/
-
-# Swarm database files
-.swarm/
 
 # Testing
 .pytest_cache/

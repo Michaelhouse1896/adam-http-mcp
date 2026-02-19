@@ -16,10 +16,11 @@ This document provides comprehensive details for all 70+ API endpoints in the AD
 1. [API Core & System](#api-core--system)
 2. [Data Query API](#data-query-api)
 3. [Pupils API](#pupils-api)
-4. [Families API](#families-api)
-5. [Subjects & Classes API](#subjects--classes-api)
-6. [Assessments & Reporting API](#assessments--reporting-api)
-7. [Module-Specific APIs](#module-specific-apis)
+4. [Calendar API](#calendar-api)
+5. [Families API](#families-api)
+6. [Subjects & Classes API](#subjects--classes-api)
+7. [Assessments & Reporting API](#assessments--reporting-api)
+8. [Module-Specific APIs](#module-specific-apis)
    - [Medical Module](#medical-module)
    - [Leaves Module](#leaves-module)
    - [Absentees Module](#absentees-module)
@@ -29,11 +30,11 @@ This document provides comprehensive details for all 70+ API endpoints in the AD
    - [Messaging Logs Module](#messaging-logs-module)
    - [Family Login Privileges Module](#family-login-privileges-module)
    - [DevMan Export Module](#devman-export-module)
-8. [Staff API](#staff-api)
-9. [Admissions API](#admissions-api)
-10. [System Utilities APIs](#system-utilities-apis)
-11. [API Authentication & Authorization](#api-authentication--authorization)
-12. [API Response Format](#api-response-format)
+9. [Staff API](#staff-api)
+10. [Admissions API](#admissions-api)
+11. [System Utilities APIs](#system-utilities-apis)
+12. [API Authentication & Authorization](#api-authentication--authorization)
+13. [API Response Format](#api-response-format)
 
 ---
 
@@ -435,6 +436,68 @@ GET /api/pupils/searchbyid/0001010000001
 }
 ```
 (Returns array of matching pupil IDs)
+
+---
+
+### GET `/api/pupils/search-admin/{searchTerm}`
+
+**Description**: Search for pupils by administrative identifier.
+
+**Path Parameters**:
+- `searchTerm` (string, required): Administrative search term
+
+**Authorization**: Required
+
+**Example Request**:
+```bash
+GET /api/pupils/search-admin/2024001
+```
+
+**Example Response**:
+```json
+{
+  "data": [
+    {
+      "pupil_id": 123,
+      "pupil_firstname": "John",
+      "pupil_lastname": "Doe",
+      "pupil_admin": "2024001"
+    }
+  ]
+}
+```
+
+---
+
+## Calendar API
+
+### GET `/api/calendar/pupillinks`
+
+**Description**: Get pupil calendar subscription links (iCal feeds).
+
+**Path Parameters**: None
+
+**Authorization**: Required
+
+**Example Request**:
+```bash
+GET /api/calendar/pupillinks
+```
+
+---
+
+### GET `/api/calendar/stafflinks`
+
+**Description**: Get staff calendar subscription links (iCal feeds).
+
+**Path Parameters**: None
+
+**Authorization**: Required
+
+**Example Request**:
+```bash
+GET /api/calendar/stafflinks
+```
 
 ---
 
@@ -2745,6 +2808,6 @@ For API support and questions:
 
 ---
 
-**Document Version**: 1.1
-**Last Updated**: 2025-03-01
+**Document Version**: 1.2
+**Last Updated**: 2026-02-19
 **ADAM Version**: 3.x+

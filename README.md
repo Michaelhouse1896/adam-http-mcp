@@ -1,132 +1,200 @@
-# ADAM MCP Server
+# ADAM CLI
 
-A Model Context Protocol (MCP) server for ADAM School Management Information System. This server allows teachers and staff to interact with ADAM data through Claude Desktop using natural language.
+Command-line interface for the ADAM School Management Information System. Query pupil info, academic records, attendance, and contacts from the terminal. Outputs JSON by default for piping and scripting.
 
-## Features
+## Installation
 
-Access ADAM data through Claude Desktop with these capabilities:
+```bash
+pipx install -e .
+```
 
-- **Pupil Search**: Find pupils by name (no need to memorize pupil IDs!)
-- **Pupil Information**: Get comprehensive pupil details including boarding house, grade, and medical aid info
-- **Class Lists**: Retrieve lists of classes for any pupil
-- **Academic Records**: Access marks and grades for specific subjects
-- **Report Cards**: View report card comments and summaries
-- **Teacher Information**: Get lists of teachers and their email addresses for any pupil
-- **Parent Contacts**: Retrieve parent email addresses for entire classes
-- **Attendance**: Access absence summaries and detailed absence records
+This installs the `adam` command in an isolated environment via [pipx](https://pipx.pypa.io/).
 
-## For Teachers: How to Use
+## Authentication
 
-### Prerequisites
+Set your credentials:
 
-- Claude Desktop installed on your computer
-- Your school's ADAM MCP server URL (provided by IT administrator)
+```bash
+export ADAM_API_TOKEN=your_30_character_token_here
+export ADAM_BASE_URL=https://yourschool.adam.co.za/api
+```
 
-### Setup Instructions
+Get your API token from: Administration > Security Administration > Manage API Tokens.
 
-1. **Open Claude Desktop Configuration**
-   - On macOS: Open `~/Library/Application Support/Claude/claude_desktop_config.json`
-   - On Windows: Open `%APPDATA%\Claude\claude_desktop_config.json`
+### Optional: name-based lookups
 
-2. **Add ADAM MCP Server**
+To search pupils, families, and staff by name, set Data Query secrets (from Administration > Data Query):
 
-   Add the following to your configuration file:
+```bash
+export ADAM_DATAQUERY_PUPILS_SECRET=your_pupils_secret
+export ADAM_DATAQUERY_FAMILIES_SECRET=your_families_secret
+export ADAM_DATAQUERY_STAFF_SECRET=your_staff_secret
+```
 
-   **For production HTTPS** (recommended):
-   ```json
-   {
-     "mcpServers": {
-       "adam": {
-         "command": "npx",
-         "args": ["-y", "mcp-remote", "https://yourschool.adam.co.za/adam-mcp"]
-       }
-     }
-   }
-   ```
+### Optional: SSL verification
 
-   **If your school uses HTTP** (requires `--allow-http` flag):
-   ```json
-   {
-     "mcpServers": {
-       "adam": {
-         "command": "npx",
-         "args": ["-y", "mcp-remote", "http://yourschool.adam.co.za/adam-mcp", "--allow-http"]
-       }
-     }
-   }
-   ```
+```bash
+export ADAM_VERIFY_SSL=false   # default: true
+```
 
-   Replace the URL with your actual ADAM MCP server URL (your IT admin will provide this).
+## Usage
 
-   **Note**: This uses the `mcp-remote` package to connect to HTTP-based MCP servers. Claude Desktop will download it automatically on first use.
+```bash
+# Test connection
+adam test
 
-3. **Restart Claude Desktop**
+# Pupils
+adam pupils find Smith
+adam pupils info 12345
+adam pupils classes 12345
+adam pupils contacts
+adam pupils search-id 0001010000001
+adam pupils fields edit
+adam pupils search-admin 2024001
 
-4. **Verify Connection**
+# Calendar
+adam calendar pupil-links
+adam calendar staff-links
 
-   Look for a hammer icon (🔨) at the bottom-right of Claude Desktop. This indicates that MCP servers are connected.
+# Academic records
+adam academics record 12345
+adam academics assessments 12345
+adam academics markbook 1 12345
+adam academics periods 2024
+adam academics pupil-periods 12345
+adam academics results 1
+adam academics previous-reports 12345
+adam academics question-breakdown 456
 
-### Example Queries
+# Teachers
+adam teachers emails 12345
+adam teachers classes 12345
 
-Once connected, you can ask Claude things like:
+# Families
+adam families find Smith
+adam families emails 67890
+adam families children 67890
+adam families current-children 67890
+adam families relationships 12345
+adam families family-relationships 67890
+adam families contacts
+adam families search-id 8001015678081
+adam families relationship-types
+adam families login-privileges 67890
 
-- "Search for pupils named Smith"
-- "Find a pupil called John Doe"
-- "Get information about pupil with ID 12345"
-- "What classes is Sarah enrolled in?" (Claude will search for Sarah first)
-- "Show me the Biology marks for pupil 12345"
-- "Get all teacher email addresses for pupil 12345"
-- "List parent email addresses for class 10A"
-- "Show absence summary for January 2024"
-- "Get report card comments for pupil 12345"
+# Classes
+adam classes list 10
+adam classes parent-emails 10 Mathematics
+adam classes by-grade-period-subject 10 1 1
 
-Claude will use the ADAM MCP server to fetch this information automatically. You can use either pupil names or IDs - Claude will search by name if needed!
+# Attendance
+adam attendance summary 2024-01-01 2024-01-31
+adam attendance list 2024-01-01 2024-01-31
+adam attendance pupil-days 12345 2024
 
-## For Developers
+# Leaves
+adam leaves approved 2024-03-01 2024-03-31
 
-See [DEV_SETUP.md](DEV_SETUP.md) for instructions on setting up a local development environment to test and customize the MCP server.
+# Records (behaviour/achievements)
+adam records recent 12345
+adam records by-date 12345 2024-01-01 2024-06-30
 
-## For IT Administrators
+# Staff
+adam staff find Jones
 
-See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed server installation and configuration instructions.
+# Medical
+adam medical off-sport
+adam medical off-sport 2024-03-15
 
-## Available Tools
+# Subjects
+adam subjects by-grade 10
+adam subjects by-grades 8,9,10
 
-The MCP server provides these tools to Claude:
+# Psychometric
+adam psychometric assessments 12345
 
-| Tool | Description |
-|------|-------------|
-| `search_pupils` | Search for pupils by name |
-| `get_pupil_information` | Get comprehensive pupil details |
-| `get_pupil_classes` | List classes for a pupil |
-| `get_pupil_academic_record` | Get marks and grades (optionally for specific subject) |
-| `get_report_card_summary` | View report card comments |
-| `get_pupil_teachers_emails` | Get teacher list with email addresses |
-| `get_class_parent_emails` | Get parent contacts for a class |
-| `get_family_emails` | Get email addresses for a family |
-| `get_absence_summary` | Absence counts for a date range |
-| `get_detailed_absence_list` | Detailed absence records with reasons |
-| `test_adam_connection` | Test API connectivity |
+# Messages
+adam messages list 2024-03-01 2024-03-31
+adam messages get 1
 
-## Security
+# Admissions
+adam admissions status-list
+adam admissions statuses
 
-- The shared school API token is stored securely on the server
-- All communication happens over HTTPS
-- The MCP server only responds to authenticated requests
-- Teachers do not need to manage API tokens individually
+# Data Query
+adam dataquery get-one your_secret 42
+```
 
-## Support
+### Output formats
 
-For technical issues or questions:
+```bash
+adam pupils find Smith                    # JSON (default)
+adam pupils find Smith --format text      # human-readable
+adam pupils find Smith --format csv       # CSV export
+```
 
-- Check the [DEPLOYMENT.md](DEPLOYMENT.md) guide for server administration
-- Review ADAM API documentation: https://help.adam.co.za/api-access-to-adam.html
-- Contact your school's IT administrator
+### Piping
 
-## Version
+```bash
+adam pupils find Smith | jq -r '.[0].pupil_id' | xargs adam academics record
+adam classes parent-emails 10 Mathematics | jq -r '.all_emails[]'
+adam attendance list 2024-01-01 2024-01-31 | jq -r '.[].pupil_id' | sort -u
+```
 
-Current version: 1.0.0
+## Commands
+
+| Group | Command | Description |
+|-------|---------|-------------|
+| `test` | | Test API connection |
+| `pupils` | `find <name>` | Search pupils by name |
+| | `info <id>` | Get pupil details |
+| | `classes <id>` | Get pupil's classes and teachers |
+| | `contacts` | Get all pupil contacts |
+| | `search-id <id_number>` | Search pupil by ID number |
+| | `fields [action]` | Get pupil field definitions |
+| | `search-admin <term>` | Search pupils by admin identifier |
+| `calendar` | `pupil-links` | Get pupil calendar links |
+| | `staff-links` | Get staff calendar links |
+| `academics` | `record <id>` | Get academic records |
+| | `assessments <id>` | Get recent assessment results |
+| | `markbook <period> <id>` | Get markbook for a period |
+| | `periods [year]` | Get reporting periods |
+| | `pupil-periods <id>` | Get reporting periods for a pupil |
+| | `results <period>` | Get all results for a period |
+| | `previous-reports <id>` | Get list of previous reports |
+| | `question-breakdown <assessment>` | Get question breakdown for an assessment |
+| `teachers` | `emails <id>` | Get pupil's teachers and emails |
+| | `classes <id>` | Get pupil's classes with teachers |
+| `families` | `find <name>` | Search families by name |
+| | `emails <family_id>` | Get family email addresses |
+| | `children <family_id>` | Get children in a family |
+| | `current-children <family_id>` | Get currently enrolled children |
+| | `relationships <id>` | Get family relationships for a pupil |
+| | `family-relationships <family_id>` | Get relationship details for a family |
+| | `contacts` | Get all family contacts |
+| | `search-id <id_number>` | Search family by ID number |
+| | `relationship-types` | Get relationship type definitions |
+| | `login-privileges <family_id>` | Get family login privileges |
+| `classes` | `list <grade>` | List classes for a grade |
+| | `parent-emails <grade> <class>` | Get parent emails for a class |
+| | `by-grade-period-subject <g> <p> <s>` | Get classes by grade, period, subject |
+| `attendance` | `summary <from> <to>` | Get absence summary |
+| | `list <from> <to>` | Get detailed absence list |
+| | `pupil-days <id> [year]` | Get days absent for a pupil |
+| `leaves` | `approved [from] [to]` | Get approved leave requests |
+| `records` | `recent <id>` | Get recent behaviour records |
+| | `by-date <id> [from] [to]` | Get records by date range |
+| `staff` | `find <name>` | Search staff by name |
+| `medical` | `off-sport [date]` | Get off-sport list |
+| `subjects` | `by-grade <grade>` | Get subjects for a grade |
+| | `by-grades <grades>` | Get subjects for multiple grades |
+| `psychometric` | `assessments [pupil] [category]` | Get psychometric assessments |
+| `messages` | `list [from] [to]` | Get messaging logs |
+| | `get <message_id>` | Get a specific message |
+| `admissions` | `status-list` | Get registration status types |
+| | `statuses` | Get all pupil registration statuses |
+| `dataquery` | `get-one <secret> <id>` | Get single record from data query |
 
 ## License
 
-This project is intended for use with ADAM School MIS installations. Please review your ADAM license agreement regarding API usage.
+This project is intended for use with ADAM School MIS installations. Review your ADAM license agreement regarding API usage.
