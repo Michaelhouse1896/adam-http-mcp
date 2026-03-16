@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "adam-school-mis": {
+      "type": "streamable-http",
+      "url": "http://localhost:3000/mcp"
+    }
+  }
+}

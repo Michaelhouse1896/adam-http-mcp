@@ -1,22 +1,24 @@
-# ADAM CLI
+# ADAM HTTP MCP
 
-Command-line interface for the ADAM School Management Information System. Query pupil info, academic records, attendance, and contacts from the terminal. Outputs JSON by default for piping and scripting.
+HTTP MCP server for the ADAM School Management Information System. Exposes 47 ADAM API endpoints as MCP tools over HTTP using StreamableHTTPServerTransport. Designed for AI agents, Claude Desktop, and any MCP client.
 
-## Installation
+## Quick Start
 
 ```bash
-pipx install -e .
+npm install
+npm run dev
 ```
 
-This installs the `adam` command in an isolated environment via [pipx](https://pipx.pypa.io/).
+The server listens on `http://localhost:3000/mcp`.
 
-## Authentication
+## Configuration
 
-Set your credentials:
+Set credentials via environment variables:
 
 ```bash
 export ADAM_API_TOKEN=your_30_character_token_here
 export ADAM_BASE_URL=https://yourschool.adam.co.za/api
+export PORT=3000  # optional, default 3000
 ```
 
 Get your API token from: Administration > Security Administration > Manage API Tokens.
@@ -37,163 +39,112 @@ export ADAM_DATAQUERY_STAFF_SECRET=your_staff_secret
 export ADAM_VERIFY_SSL=false   # default: true
 ```
 
-## Usage
+## MCP Client Configuration
 
-```bash
-# Test connection
-adam test
+### Claude Desktop / Claude Code
 
-# Pupils
-adam pupils find Smith
-adam pupils info 12345
-adam pupils classes 12345
-adam pupils contacts
-adam pupils search-id 0001010000001
-adam pupils fields edit
-adam pupils search-admin 2024001
-
-# Calendar
-adam calendar pupil-links
-adam calendar staff-links
-
-# Academic records
-adam academics record 12345
-adam academics assessments 12345
-adam academics markbook 1 12345
-adam academics periods 2024
-adam academics pupil-periods 12345
-adam academics results 1
-adam academics previous-reports 12345
-adam academics question-breakdown 456
-
-# Teachers
-adam teachers emails 12345
-adam teachers classes 12345
-
-# Families
-adam families find Smith
-adam families emails 67890
-adam families children 67890
-adam families current-children 67890
-adam families relationships 12345
-adam families family-relationships 67890
-adam families contacts
-adam families search-id 8001015678081
-adam families relationship-types
-adam families login-privileges 67890
-
-# Classes
-adam classes list 10
-adam classes parent-emails 10 Mathematics
-adam classes by-grade-period-subject 10 1 1
-
-# Attendance
-adam attendance summary 2024-01-01 2024-01-31
-adam attendance list 2024-01-01 2024-01-31
-adam attendance pupil-days 12345 2024
-
-# Leaves
-adam leaves approved 2024-03-01 2024-03-31
-
-# Records (behaviour/achievements)
-adam records recent 12345
-adam records by-date 12345 2024-01-01 2024-06-30
-
-# Staff
-adam staff find Jones
-
-# Medical
-adam medical off-sport
-adam medical off-sport 2024-03-15
-
-# Subjects
-adam subjects by-grade 10
-adam subjects by-grades 8,9,10
-
-# Psychometric
-adam psychometric assessments 12345
-
-# Messages
-adam messages list 2024-03-01 2024-03-31
-adam messages get 1
-
-# Admissions
-adam admissions status-list
-adam admissions statuses
-
-# Data Query
-adam dataquery get-one your_secret 42
+```json
+{
+  "mcpServers": {
+    "adam-school-mis": {
+      "type": "streamable-http",
+      "url": "http://localhost:3000/mcp"
+    }
+  }
+}
 ```
 
-### Output formats
+## Development
 
 ```bash
-adam pupils find Smith                    # JSON (default)
-adam pupils find Smith --format text      # human-readable
-adam pupils find Smith --format csv       # CSV export
+# Development (no build, uses tsx)
+npm run dev
+
+# Build to dist/
+npm run build
+
+# Run production build
+npm start
 ```
 
-### Piping
+## Docker
 
 ```bash
-adam pupils find Smith | jq -r '.[0].pupil_id' | xargs adam academics record
-adam classes parent-emails 10 Mathematics | jq -r '.all_emails[]'
-adam attendance list 2024-01-01 2024-01-31 | jq -r '.[].pupil_id' | sort -u
+docker build -t adam-http-mcp .
+docker run -p 3000:3000 \
+  -e ADAM_API_TOKEN=your_token \
+  -e ADAM_BASE_URL=https://yourschool.adam.co.za/api \
+  adam-http-mcp
 ```
 
-## Commands
+## Tools
 
-| Group | Command | Description |
-|-------|---------|-------------|
-| `test` | | Test API connection |
-| `pupils` | `find <name>` | Search pupils by name |
-| | `info <id>` | Get pupil details |
-| | `classes <id>` | Get pupil's classes and teachers |
-| | `contacts` | Get all pupil contacts |
-| | `search-id <id_number>` | Search pupil by ID number |
-| | `fields [action]` | Get pupil field definitions |
-| | `search-admin <term>` | Search pupils by admin identifier |
-| `calendar` | `pupil-links` | Get pupil calendar links |
-| | `staff-links` | Get staff calendar links |
-| `academics` | `record <id>` | Get academic records |
-| | `assessments <id>` | Get recent assessment results |
-| | `markbook <period> <id>` | Get markbook for a period |
-| | `periods [year]` | Get reporting periods |
-| | `pupil-periods <id>` | Get reporting periods for a pupil |
-| | `results <period>` | Get all results for a period |
-| | `previous-reports <id>` | Get list of previous reports |
-| | `question-breakdown <assessment>` | Get question breakdown for an assessment |
-| `teachers` | `emails <id>` | Get pupil's teachers and emails |
-| | `classes <id>` | Get pupil's classes with teachers |
-| `families` | `find <name>` | Search families by name |
-| | `emails <family_id>` | Get family email addresses |
-| | `children <family_id>` | Get children in a family |
-| | `current-children <family_id>` | Get currently enrolled children |
-| | `relationships <id>` | Get family relationships for a pupil |
-| | `family-relationships <family_id>` | Get relationship details for a family |
-| | `contacts` | Get all family contacts |
-| | `search-id <id_number>` | Search family by ID number |
-| | `relationship-types` | Get relationship type definitions |
-| | `login-privileges <family_id>` | Get family login privileges |
-| `classes` | `list <grade>` | List classes for a grade |
-| | `parent-emails <grade> <class>` | Get parent emails for a class |
-| | `by-grade-period-subject <g> <p> <s>` | Get classes by grade, period, subject |
-| `attendance` | `summary <from> <to>` | Get absence summary |
-| | `list <from> <to>` | Get detailed absence list |
-| | `pupil-days <id> [year]` | Get days absent for a pupil |
-| `leaves` | `approved [from] [to]` | Get approved leave requests |
-| `records` | `recent <id>` | Get recent behaviour records |
-| | `by-date <id> [from] [to]` | Get records by date range |
-| `staff` | `find <name>` | Search staff by name |
-| `medical` | `off-sport [date]` | Get off-sport list |
-| `subjects` | `by-grade <grade>` | Get subjects for a grade |
-| | `by-grades <grades>` | Get subjects for multiple grades |
-| `psychometric` | `assessments [pupil] [category]` | Get psychometric assessments |
-| `messages` | `list [from] [to]` | Get messaging logs |
-| | `get <message_id>` | Get a specific message |
-| `admissions` | `status-list` | Get registration status types |
-| | `statuses` | Get all pupil registration statuses |
-| `dataquery` | `get-one <secret> <id>` | Get single record from data query |
+47 MCP tools across 16 categories:
+
+| Category | Tool | Description |
+|----------|------|-------------|
+| **Test** | `test_connection` | Test API connectivity |
+| **Pupils** | `pupils_find` | Search pupils by name (requires dataquery secret) |
+| | `pupils_info` | Get pupil details |
+| | `pupils_classes` | Get pupil's classes and teachers |
+| | `pupils_contacts` | Get all pupil contacts |
+| | `pupils_search_id` | Search pupil by ID number |
+| | `pupils_fields` | Get pupil field definitions |
+| | `pupils_search_admin` | Search by admin identifier |
+| **Calendar** | `calendar_pupil_links` | Get pupil calendar links |
+| | `calendar_staff_links` | Get staff calendar links |
+| **Academics** | `academics_record` | Get academic records |
+| | `academics_assessments` | Get recent assessment results |
+| | `academics_markbook` | Get markbook for a period |
+| | `academics_periods` | Get reporting periods |
+| | `academics_pupil_periods` | Get reporting periods for a pupil |
+| | `academics_results` | Get all results for a period |
+| | `academics_previous_reports` | Get previous reports |
+| | `academics_question_breakdown` | Get question breakdown |
+| **Teachers** | `teachers_emails` | Get pupil's teachers and emails |
+| | `teachers_classes` | Get pupil's classes with teachers |
+| **Families** | `families_find` | Search families by name (requires dataquery secret) |
+| | `families_emails` | Get family email addresses |
+| | `families_children` | Get children in a family |
+| | `families_relationships` | Get family relationships for a pupil |
+| | `families_contacts` | Get all family contacts |
+| | `families_current_children` | Get currently enrolled children |
+| | `families_search_id` | Search family by ID number |
+| | `families_relationship_types` | Get relationship type definitions |
+| | `families_family_relationships` | Get relationship details for a family |
+| | `families_login_privileges` | Get family login privileges |
+| **Classes** | `classes_list` | List classes for a grade with pupil counts |
+| | `classes_parent_emails` | Get parent emails for a class (multi-step) |
+| | `classes_by_grade_period_subject` | Get classes by grade, period, subject |
+| **Attendance** | `attendance_summary` | Get absence summary for date range |
+| | `attendance_list` | Get detailed absence list |
+| | `attendance_pupil_days` | Get days absent for a pupil |
+| **Leaves** | `leaves_approved` | Get approved leave requests |
+| **Records** | `records_recent` | Get recent behaviour records |
+| | `records_by_date` | Get records by date range |
+| **Staff** | `staff_find` | Search staff by name (requires dataquery secret) |
+| **Medical** | `medical_off_sport` | Get off-sport list |
+| **Subjects** | `subjects_by_grade` | Get subjects for a grade |
+| | `subjects_by_grades` | Get subjects for multiple grades |
+| **Psychometric** | `psychometric_assessments` | Get psychometric assessments |
+| **Messages** | `messages_list` | Get messaging logs |
+| | `messages_get` | Get a specific message |
+| **Admissions** | `admissions_status_list` | Get registration status types |
+| | `admissions_statuses` | Get all registration statuses |
+| **Data Query** | `dataquery_get_one` | Get single record by secret and ID |
+
+## Architecture
+
+```
+src/
+  tools.ts    # Tool definitions (names, params, API path mappings)
+  index.ts    # MCP server, Express HTTP transport, API client, custom handlers
+```
+
+- **Simple tools** map directly to ADAM API paths: `/api/{module}/{resource}/{param1}/{param2}/...`
+- **Custom tools** handle complex logic (name searches via Data Query, class parent email orchestration, client-side filtering)
+- Per-session isolation via `StreamableHTTPServerTransport`
+- ADAM response wrapper (`{"response": {"code": 200}, "data": ...}`) is automatically unwrapped
 
 ## License
 

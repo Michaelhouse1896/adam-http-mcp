@@ -1,103 +1,111 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
 ## Project Overview
 
-Pure CLI tool for the ADAM School Management Information System REST API. Teachers query pupil info, academic records, attendance, and contacts via command line. Designed for piping, scripting, and agent use.
+HTTP MCP server for the ADAM School Management Information System REST API. Exposes ADAM endpoints as MCP tools over HTTP using StreamableHTTPServerTransport. Teachers and AI agents query pupil info, academic records, attendance, and contacts.
 
-**Stack**: Python 3.10+ / httpx. Single-file CLI (`adam_cli.py`, ~1300 lines) + `pyproject.toml`.
+**Stack**: TypeScript / Express / @modelcontextprotocol/sdk. Two source files: `src/tools.ts` (tool definitions) + `src/index.ts` (server, API client, custom handlers).
 
 ## Development Commands
 
 ```bash
-# Install (isolated env via pipx)
-pipx install -e .
+# Install dependencies
+npm install
+
+# Development (no build needed, uses tsx)
+npm run dev
+
+# Build to dist/
+npm run build
+
+# Run production build
+npm start
 
 # Set credentials via environment
 export ADAM_API_TOKEN=your_30_character_token_here
 export ADAM_BASE_URL=https://yourschool.adam.co.za/api
-
-# Run
-adam test
-adam pupils find Smith
-adam academics periods 2024 --format text
-
-# Piping examples
-adam pupils find Smith | jq -r '.[0].pupil_id' | xargs adam academics record
-adam classes parent-emails 10 Mathematics | jq -r '.all_emails[]'
+export PORT=3000
 ```
 
-**No tests, linting, or formatting tools are configured.** There is no test suite. Run `adam test` to verify API connectivity.
+**No tests, linting, or formatting tools are configured.**
 
 ## Architecture
 
-Everything lives in `adam_cli.py`:
+### src/tools.ts — Tool Definitions
 
-1. **Config** (line ~22) — reads env vars, validates token (exactly 30 chars) and base URL
-2. **AdamAPIError** (line ~66) — custom exception with `message` and `status_code`
-3. **AdamAPIClient** (line ~73) — all async API methods, central `_make_request()` builds URLs
-4. **Output formatters** (line ~576) — `_output_json`, `_output_text`, `_output_csv`
-5. **Command handlers** (line ~634) — `cmd_*` async functions, one per CLI command
-6. **Parser** (line ~955) — `build_parser()` with argparse nested subparsers
-7. **Entry point** (line ~1264) — `_async_main()` → `main()` with SIGPIPE/KeyboardInterrupt handling
+Array of `ToolDef` objects. Each defines:
+- `toolName` — MCP tool name (e.g. `pupils_find`, `academics_record`)
+- `description` — Human-readable description
+- `params` — Array of `{name, type, required, description}`
+- `module` / `resource` / `pathParams` — For simple tools that map directly to ADAM API paths
+- `handler: "custom"` — For tools that need custom logic
+
+### src/index.ts — Server
+
+1. **Config** — Reads env vars, validates token (30 chars) and base URL
+2. **adamRequest()** — Central API caller. Builds URL: `{BASE_URL}/{module}/{resource}/{p1}/{p2}/...`. Unwraps ADAM's `{"response": {"code": 200}, "data": ...}` wrapper.
+3. **buildZodShape()** — Converts tool params to Zod schemas for MCP registration
+4. **callSimpleTool()** — Generic handler for tools with `module`/`resource`/`pathParams`
+5. **Custom handlers** — `handlePupilsFind`, `handleFamiliesFind`, `handleStaffFind`, `handleClassesList`, `handleClassesParentEmails`, `handleLeavesApproved`
+6. **createServer()** — Registers all tools from `tools.ts` as MCP tools
+7. **Express transport** — POST/GET/DELETE on `/mcp` with per-session isolation
 
 ### ADAM API URL Pattern
 
-All parameters are **path segments**, not query params. `_make_request(module, resource, params)` builds: `/api/{module}/{resource}/{param1}/{param2}/...`
+All parameters are **path segments**, not query params: `/api/{module}/{resource}/{param1}/{param2}/...`
 
-```
-/api/pupils/pupil/12345              (NOT ?id=12345)
-/api/absentees/summarycount/2024-01-01/2024-01-31   (NOT ?from=...&to=...)
-```
+Parameters are percent-encoded. Dates must be `YYYY-MM-DD`.
 
-Parameters are percent-encoded via `urllib.parse.quote`. Dates must be `YYYY-MM-DD`.
+### Custom Handler Tools
 
-### API Response Handling
+- **pupils_find / families_find / staff_find** — Fetch all data via Data Query API, client-side multi-word name filtering
+- **classes_list** — Aggregates grade registrations into deduplicated class summary
+- **classes_parent_emails** — Chains: grade registrations → family relationships → family emails → deduplicated email list
+- **leaves_approved** — Client-side date range filtering
 
-The ADAM API wraps responses in `{"response": {"code": 200}, "data": ...}`. `_make_request()` checks the inner `response.code`, raises `AdamAPIError` on non-200, and returns the unwrapped `data` field. If there's no `response` wrapper, it returns the raw JSON.
+## Adding a New Tool
 
-### Data Query (Name-Based Lookups)
-
-`find_pupils_by_name`, `find_families_by_name`, `find_staff_by_name` all follow the same pattern:
-1. Call `get_all_*_data()` which hits the Data Query API (`dataquery/get/{secret}`)
-2. Client-side filter across multiple name fields using multi-word search (`all(word in combined)`)
-3. Return a curated subset of fields
-
-Requires `ADAM_DATAQUERY_*_SECRET` env vars. Data Query field names are cryptic (e.g., `last_name_2`, `adam_id_257`) — these come from ADAM's internal schema.
-
-### Complex Orchestration: `get_class_parent_emails`
-
-This is the most complex method (~100 lines). It chains multiple API calls:
-grade registrations → filter by class description (case-insensitive substring match) → per-pupil family relationships → per-family emails → deduplicate into `all_emails` list.
-
-## Adding a New CLI Command
-
-1. Add async method to `AdamAPIClient`:
-   ```python
-   async def get_something(self, param: str) -> dict[str, Any]:
-       return await self._make_request("ModuleName", "resource", [param])
+1. Add entry to `tools` array in `src/tools.ts`:
+   ```typescript
+   {
+     toolName: "group_action",
+     description: "What it does",
+     params: [{ name: "param", type: "string", required: true, description: "..." }],
+     module: "ModuleName",
+     resource: "resource",
+     pathParams: ["param"],
+   }
    ```
 
-2. Add command handler:
-   ```python
-   async def cmd_group_action(client: AdamAPIClient, args: argparse.Namespace) -> Any:
-       return await client.get_something(args.param)
-   ```
+2. For complex tools, set `handler: "custom"` and add handler function + dispatch entry in `src/index.ts`.
 
-3. Add subparser in `build_parser()`:
-   ```python
-   p = group_sub.add_parser("action", help="Description")
-   p.add_argument("param", help="Parameter description")
-   p.set_defaults(func=cmd_group_action)
-   ```
-
-4. Reference `API_DOCUMENTATION.md` for endpoint details (70+ endpoints documented with paths, parameters, and authorization requirements).
+3. Reference `API_DOCUMENTATION.md` for endpoint details (70+ endpoints documented).
 
 ## Configuration
 
-All via environment variables. Required: `ADAM_API_TOKEN` (30 chars), `ADAM_BASE_URL` (full URL ending in `/api`). Optional: `ADAM_DATAQUERY_PUPILS_SECRET`, `ADAM_DATAQUERY_FAMILIES_SECRET`, `ADAM_DATAQUERY_STAFF_SECRET` (enable name lookups), `ADAM_VERIFY_SSL` (default `true`).
+All via environment variables:
+- **Required**: `ADAM_API_TOKEN` (30 chars), `ADAM_BASE_URL` (full URL ending in `/api`)
+- **Optional**: `ADAM_DATAQUERY_PUPILS_SECRET`, `ADAM_DATAQUERY_FAMILIES_SECRET`, `ADAM_DATAQUERY_STAFF_SECRET` (enable name lookups), `ADAM_VERIFY_SSL` (default `true`), `PORT` (default `3000`)
 
-## CLI Output
+## MCP Client Configuration
 
-All commands output JSON to stdout by default. `--format text` for human-readable, `--format csv` for export. Errors go to stderr as JSON. Exit code 0 on success, 1 on error, 130 on interrupt. SIGPIPE and BrokenPipeError are handled gracefully for piping to `head`/`less`.
+```json
+{
+  "mcpServers": {
+    "adam-school-mis": {
+      "type": "streamable-http",
+      "url": "http://localhost:3000/mcp"
+    }
+  }
+}
+```
+
+## Docker
+
+```bash
+docker build -t adam-http-mcp .
+docker run -p 3000:3000 \
+  -e ADAM_API_TOKEN=your_token \
+  -e ADAM_BASE_URL=https://yourschool.adam.co.za/api \
+  adam-http-mcp
+```
