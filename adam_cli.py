@@ -379,14 +379,10 @@ class AdamAPIClient:
     # -- Leaves ---------------------------------------------------------------
 
     async def get_approved_leaves(
-        self, start_date: str | None = None, end_date: str | None = None
+        self, pupil_id: str | None = None
     ) -> dict[str, Any]:
-        params: list[str] = []
-        if start_date:
-            params.append(start_date)
-            if end_date:
-                params.append(end_date)
-        return await self._make_request("leaves", "approved", params or None)
+        params = [pupil_id] if pupil_id else None
+        return await self._make_request("leaves", "approved", params)
 
     # -- Records --------------------------------------------------------------
 
@@ -856,9 +852,20 @@ async def cmd_attendance_pupil_days(
 # -- Leaves --
 
 async def cmd_leaves_approved(client: AdamAPIClient, args: argparse.Namespace) -> Any:
-    return await client.get_approved_leaves(
-        getattr(args, "start_date", None), getattr(args, "end_date", None)
-    )
+    data = await client.get_approved_leaves(getattr(args, "pupil_id", None))
+    start = getattr(args, "start_date", None)
+    end = getattr(args, "end_date", None)
+    if start or end:
+        filtered = []
+        for leave in data:
+            out = leave.get("leave_request_out", "")[:10]
+            if start and out < start:
+                continue
+            if end and out > end:
+                continue
+            filtered.append(leave)
+        return filtered
+    return data
 
 
 # -- Records --
@@ -1164,8 +1171,9 @@ def build_parser() -> argparse.ArgumentParser:
     leaves_sub = leaves.add_subparsers(dest="subcommand")
 
     p = leaves_sub.add_parser("approved", help="Get approved leave requests")
-    p.add_argument("start_date", nargs="?", help="Start date (YYYY-MM-DD)")
-    p.add_argument("end_date", nargs="?", help="End date (YYYY-MM-DD)")
+    p.add_argument("pupil_id", nargs="?", help="Pupil ID (optional, omit for all)")
+    p.add_argument("--from", dest="start_date", help="Filter from date (YYYY-MM-DD, inclusive)")
+    p.add_argument("--to", dest="end_date", help="Filter to date (YYYY-MM-DD, inclusive)")
     p.set_defaults(func=cmd_leaves_approved)
 
     # -- records --------------------------------------------------------------

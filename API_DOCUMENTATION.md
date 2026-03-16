@@ -1499,20 +1499,20 @@ GET /api/medical/offsport/2024-03-15
 
 ### Leaves Module
 
-#### GET `/api/leaves/approved/{from}/{to}`
+#### GET `/api/leaves/approved/{pupil_id}`
 **File**: `classes/ADAM/Modules/Leaves/Leaves.php:942`
 
-**Description**: Get approved leave requests.
+**Description**: Get approved leave requests. Optionally filter by pupil ID. Date filtering is not supported by the API; filter client-side if needed.
 
 **Path Parameters**:
-- `from` (string, optional): Start date (YYYY-MM-DD)
-- `to` (string, optional): End date (YYYY-MM-DD)
+- `pupil_id` (string, optional): Pupil ID to filter leaves for a specific student
 
 **Authorization**: Required
 
-**Example Request**:
+**Example Requests**:
 ```bash
-GET /api/leaves/approved/2024-03-01/2024-03-31
+GET /api/leaves/approved          # all approved leaves
+GET /api/leaves/approved/318      # approved leaves for pupil 318
 ```
 
 **Example Response**:
@@ -1520,11 +1520,24 @@ GET /api/leaves/approved/2024-03-01/2024-03-31
 {
   "data": [
     {
-      "leave_id": 1,
-      "pupil_id": 123,
-      "leave_start": "2024-03-15",
-      "leave_end": "2024-03-20",
-      "leave_reason": "Family vacation"
+      "leave_request_id": 2375,
+      "leave_request_out": "2026-05-29 10:00:00",
+      "leave_request_in": "2026-05-31 20:00:00",
+      "leave_request_destination": "Berg and Bush MTN Biking",
+      "leave_request_host": "Llewellyn Watson - DAD",
+      "leave_request_host_contact": "076 814 4789",
+      "leave_request_notes": "",
+      "leave_request_approval_notes": "\n",
+      "leave_request_status": "Approved",
+      "leave_request_user_id": 264,
+      "leave_request_user_type": "staff",
+      "leave_request_submitted_datetime": "2026-02-16 10:31:20",
+      "leave_request_reminder_datetime": null,
+      "leave_request_choices": "",
+      "leave_type_id": 4,
+      "leave_type_description": "Special Leave",
+      "leave_type_overnight": "Yes",
+      "leave_type_off_campus": "Yes"
     }
   ]
 }
