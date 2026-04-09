@@ -566,17 +566,33 @@ export const tools: ToolDef[] = [
   },
 
   // ---------------------------------------------------------------------------
-  // Data Query
+  // Data Query — full record lookups (secret resolved internally)
   // ---------------------------------------------------------------------------
   {
-    toolName: "dataquery_get_one",
-    description: "Get a single record from a data query by secret and identifier.",
+    toolName: "staff_data",
+    description:
+      "Get the full data query record for a staff member by identifier. Returns ALL fields. Use staff_find first to get the identifier.",
     params: [
-      { name: "secret", type: "string", required: true, description: "Data query secret key" },
-      { name: "identifier", type: "string", required: true, description: "Individual ID" },
+      { name: "identifier", type: "string", required: true, description: "Staff identifier (adam_identifier or admin_no)" },
     ],
-    module: "dataquery",
-    resource: "getone",
-    pathParams: ["secret", "identifier"],
+    handler: "custom",
+  },
+  {
+    toolName: "pupils_data",
+    description:
+      "Get the full data query record for a pupil by identifier. Returns ALL fields. Use pupils_find or pupils_search_admin first to get the identifier.",
+    params: [
+      { name: "identifier", type: "string", required: true, description: "Pupil identifier (adam_id or admin_number)" },
+    ],
+    handler: "custom",
+  },
+  {
+    toolName: "families_data",
+    description:
+      "Get the full data query record for a family by identifier. Returns ALL fields. Use families_find first to get the identifier.",
+    params: [
+      { name: "identifier", type: "string", required: true, description: "Family identifier" },
+    ],
+    handler: "custom",
   },
 ];

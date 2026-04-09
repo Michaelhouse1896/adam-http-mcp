@@ -204,6 +204,21 @@ function createServer(creds: Credentials): McpServer {
     return results;
   }
 
+  async function handleStaffData(args: Record<string, any>): Promise<any> {
+    if (!creds.dataqueryStaffSecret) throw new Error("ADAM_DATAQUERY_STAFF_SECRET not configured");
+    return adamRequest("dataquery", "getone", [creds.dataqueryStaffSecret, String(args.identifier)]);
+  }
+
+  async function handlePupilsData(args: Record<string, any>): Promise<any> {
+    if (!creds.dataqueryPupilsSecret) throw new Error("ADAM_DATAQUERY_PUPILS_SECRET not configured");
+    return adamRequest("dataquery", "getone", [creds.dataqueryPupilsSecret, String(args.identifier)]);
+  }
+
+  async function handleFamiliesData(args: Record<string, any>): Promise<any> {
+    if (!creds.dataqueryFamiliesSecret) throw new Error("ADAM_DATAQUERY_FAMILIES_SECRET not configured");
+    return adamRequest("dataquery", "getone", [creds.dataqueryFamiliesSecret, String(args.identifier)]);
+  }
+
   async function handleClassesList(args: Record<string, any>): Promise<any> {
     const regsRaw = await adamRequest("registrations", "grade", [String(args.grade)]);
     const regs = Array.isArray(regsRaw) ? regsRaw : (regsRaw?.data ?? []);
@@ -354,6 +369,9 @@ function createServer(creds: Credentials): McpServer {
     pupils_find: handlePupilsFind,
     families_find: handleFamiliesFind,
     staff_find: handleStaffFind,
+    staff_data: handleStaffData,
+    pupils_data: handlePupilsData,
+    families_data: handleFamiliesData,
     classes_list: handleClassesList,
     classes_parent_emails: handleClassesParentEmails,
     leaves_approved: handleLeavesApproved,
