@@ -573,7 +573,7 @@ export const tools: ToolDef[] = [
     description:
       "Get the full data query record for a staff member by identifier. Returns ALL fields. Use staff_find first to get the identifier.",
     params: [
-      { name: "identifier", type: "string", required: true, description: "Staff identifier (adam_identifier or admin_no)" },
+      { name: "identifier", type: "string", required: true, description: "Staff adam_identifier (use staff_find first to obtain this)" },
     ],
     handler: "custom",
   },
@@ -582,7 +582,7 @@ export const tools: ToolDef[] = [
     description:
       "Get the full data query record for a pupil by identifier. Returns ALL fields. Use pupils_find or pupils_search_admin first to get the identifier.",
     params: [
-      { name: "identifier", type: "string", required: true, description: "Pupil identifier (adam_id or admin_number)" },
+      { name: "identifier", type: "string", required: true, description: "Pupil adam_id (use pupils_find or pupils_search_admin first to obtain this)" },
     ],
     handler: "custom",
   },
